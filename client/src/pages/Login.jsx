@@ -97,8 +97,8 @@ export const Login = () => {
               type="button"
               onClick={() => {
                 setLoginMode('admin');
-                setPhone('9999999999');
-                setPassword('password123');
+                setPhone('9030585591');
+                setPassword('admin@123');
                 setError('');
               }}
               className={`py-2.5 rounded-2xl flex items-center justify-center space-x-1.5 transition-all ${
@@ -155,14 +155,14 @@ export const Login = () => {
                   </span>
                   <button
                     type="button"
-                    onClick={() => handleFillDemo('9999999999', 'password123', 'admin')}
+                    onClick={() => handleFillDemo('9030585591', 'admin@123', 'admin')}
                     className="text-[10px] bg-indigo-600 text-white px-2 py-0.5 rounded-md font-bold hover:bg-indigo-700"
                   >
                     Auto Fill Admin
                   </button>
                 </div>
                 <p className="text-[11px] text-indigo-800 font-medium">
-                  Admin Login Phone: <strong className="font-mono text-indigo-950">9999999999</strong> | Pass: <strong className="font-mono text-indigo-950">password123</strong>
+                  Admin Login Phone: <strong className="font-mono text-indigo-950">9030585591</strong> | Pass: <strong className="font-mono text-indigo-950">admin@123</strong>
                 </p>
               </div>
             )}

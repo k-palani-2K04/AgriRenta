@@ -14,17 +14,34 @@ const serviceSchema = new mongoose.Schema(
     },
     category: {
       type: String,
-      enum: ['machine', 'human_labor'],
+      enum: ['Machinery & Farm Equipment', 'Agricultural Skilled Workforce', 'machine', 'human_labor'],
       required: [true, 'Category is required']
+    },
+    workforceType: {
+      type: String,
+      enum: ['Individual Worker', 'Workgroup Team', null],
+      default: null
+    },
+    workerCount: {
+      type: Number,
+      default: 1
+    },
+    workforceGenderComposition: {
+      type: String,
+      enum: ['Mixed Group', 'Female Workers', 'Male Workers', 'N/A'],
+      default: 'N/A'
+    },
+    specializedTasks: {
+      type: [String],
+      default: []
     },
     taskType: {
       type: String,
-      enum: ['ploughing', 'sowing', 'transplanting', 'weeding', 'fertilizing', 'harvesting'],
       required: [true, 'Task type is required']
     },
     pricingUnit: {
       type: String,
-      enum: ['per_hour', 'per_acre', 'per_day'],
+      enum: ['per_hour', 'per_acre', 'per_day', 'per_worker_day', 'per_group_acre'],
       required: [true, 'Pricing unit is required']
     },
     priceInRupees: {

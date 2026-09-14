@@ -27,7 +27,7 @@ const bookingSchema = new mongoose.Schema(
     },
     pricingUnit: {
       type: String,
-      enum: ['per_hour', 'per_acre', 'per_day'],
+      enum: ['per_hour', 'per_acre', 'per_day', 'per_worker_day', 'per_group_acre'],
       default: 'per_hour'
     },
     quantity: {

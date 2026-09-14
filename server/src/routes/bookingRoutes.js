@@ -54,11 +54,12 @@ const handleCreateBooking = async (req, res) => {
 
     // Financial Breakdown:
     // 1. Client Advance = 20% of Total Service Cost
-    // 2. Admin Commission = 5% of Total Service Cost (25% of Advance)
-    // 3. Provider Disbursement = 15% of Total Service Cost (75% of Advance)
+    // 2. For Agricultural Skilled Workforce: 0% Admin Commission (100% of advance disbursed to provider)
+    // 3. For Machinery & Farm Equipment: 5% Admin Commission (15% net provider disbursement)
+    const isWorkforce = service.category === 'Agricultural Skilled Workforce' || service.category === 'human_labor';
     const advancePaid = Math.round(calculatedTotal * 0.20);
-    const adminComm = Math.round(calculatedTotal * 0.05);
-    const providerPayout = Math.round(calculatedTotal * 0.15);
+    const adminComm = isWorkforce ? 0 : Math.round(calculatedTotal * 0.05);
+    const providerPayout = isWorkforce ? advancePaid : Math.round(calculatedTotal * 0.15);
 
     // Set payment status based on verification or payment method (downstream actions blocked until confirmed)
     let finalPaymentStatus = clientPaymentStatus;

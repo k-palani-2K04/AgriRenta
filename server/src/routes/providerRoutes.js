@@ -10,15 +10,24 @@ const router = express.Router();
 
 router.use(protect, providerOnly);
 
-// Helper function to safely delete file from uploads directory
+// Helper function to safely delete file from uploads directory (handling /uploads/equipment/ and /uploads/workers/)
 const safeDeleteUploadFile = (imageUrl) => {
   if (!imageUrl || !imageUrl.startsWith('/uploads/')) return;
   try {
-    const filename = path.basename(imageUrl);
-    const filePath = path.join(process.cwd(), 'uploads', filename);
+    const relativePath = imageUrl.startsWith('/') ? imageUrl.slice(1) : imageUrl;
+    const filePath = path.join(process.cwd(), relativePath);
+
     if (fs.existsSync(filePath)) {
       fs.unlinkSync(filePath);
-      console.log(`[Uploads] Cleaned up file from disk: ${filename}`);
+      console.log(`[Uploads] Cleaned up file from disk: ${filePath}`);
+    } else {
+      // Fallback check in root uploads directory
+      const filename = path.basename(imageUrl);
+      const fallbackPath = path.join(process.cwd(), 'uploads', filename);
+      if (fs.existsSync(fallbackPath)) {
+        fs.unlinkSync(fallbackPath);
+        console.log(`[Uploads] Cleaned up file from fallback path: ${fallbackPath}`);
+      }
     }
   } catch (err) {
     console.error(`[Uploads] Error deleting file ${imageUrl}:`, err.message);
@@ -38,7 +47,11 @@ router.post('/services', upload.single('image'), async (req, res) => {
       priceInRupees,
       status,
       locationRadiusKm,
-      description
+      description,
+      workforceType,
+      workerCount,
+      workforceGenderComposition,
+      specializedTasks
     } = req.body;
 
     if (!title || !category || !taskType || !pricingUnit || priceInRupees === undefined) {
@@ -48,10 +61,13 @@ router.post('/services', upload.single('image'), async (req, res) => {
       });
     }
 
-    // Set image URL from uploaded file if present
+    const isWorkforce = category === 'Agricultural Skilled Workforce' || category === 'human_labor';
+
+    // Set image URL from uploaded file if present, routing to /uploads/workers or /uploads/equipment
     let imageUrl = '';
     if (req.file) {
-      imageUrl = `/uploads/${req.file.filename}`;
+      const subfolder = isWorkforce ? 'workers' : 'equipment';
+      imageUrl = `/uploads/${subfolder}/${req.file.filename}`;
     }
 
     // Always fetch provider location coordinates and details from request or user profile
@@ -62,10 +78,23 @@ router.post('/services', upload.single('image'), async (req, res) => {
 
     if (req.body.userLat && req.body.userLng) {
       providerCoords = { latitude: Number(req.body.userLat), longitude: Number(req.body.userLng) };
-    } else if (req.user.location && req.user.location.latitude) {
-      providerCoords = req.user.location;
     } else {
+      // Prioritize coordinates for the specific district of the service listing
       providerCoords = getCoordinatesForDistrict(providerDistrict);
+    }
+
+    // Format specialized tasks array if passed as JSON string
+    let parsedTasks = [];
+    if (specializedTasks) {
+      if (Array.isArray(specializedTasks)) {
+        parsedTasks = specializedTasks;
+      } else if (typeof specializedTasks === 'string') {
+        try {
+          parsedTasks = JSON.parse(specializedTasks);
+        } catch (e) {
+          parsedTasks = specializedTasks.split(',').map(t => t.trim()).filter(Boolean);
+        }
+      }
     }
 
     const service = await Service.create({
@@ -82,12 +111,16 @@ router.post('/services', upload.single('image'), async (req, res) => {
       district: providerDistrict,
       village: providerVillage,
       location: providerCoords,
-      description: description || ''
+      description: description || '',
+      workforceType: isWorkforce ? (workforceType || 'Individual Worker') : null,
+      workerCount: isWorkforce ? (Number(workerCount) || 1) : 1,
+      workforceGenderComposition: isWorkforce ? (workforceGenderComposition || 'Mixed Group') : 'N/A',
+      specializedTasks: parsedTasks
     });
 
     return res.status(201).json({
       success: true,
-      message: 'Service created successfully',
+      message: 'Service listing created successfully',
       service
     });
   } catch (error) {
@@ -106,7 +139,7 @@ router.get('/services', async (req, res) => {
   try {
     let services = await Service.find({ providerId: req.user._id }).sort({ createdAt: -1 });
 
-    // Fallback: If provider has no listings yet, return all available listings so they can manage/view them
+    // Fallback: If provider has no listings yet, return all available listings
     if (services.length === 0) {
       services = await Service.find({}).sort({ createdAt: -1 });
     }
@@ -152,7 +185,11 @@ router.put('/services/:id', upload.single('image'), async (req, res) => {
       district,
       village,
       userLat,
-      userLng
+      userLng,
+      workforceType,
+      workerCount,
+      workforceGenderComposition,
+      specializedTasks
     } = req.body;
 
     if (title !== undefined) service.title = title;
@@ -163,6 +200,25 @@ router.put('/services/:id', upload.single('image'), async (req, res) => {
     if (status !== undefined) service.status = status;
     if (locationRadiusKm !== undefined) service.locationRadiusKm = Number(locationRadiusKm);
     if (description !== undefined) service.description = description;
+
+    const isWorkforce = (category || service.category) === 'Agricultural Skilled Workforce' || (category || service.category) === 'human_labor';
+
+    if (isWorkforce) {
+      if (workforceType !== undefined) service.workforceType = workforceType;
+      if (workerCount !== undefined) service.workerCount = Number(workerCount);
+      if (workforceGenderComposition !== undefined) service.workforceGenderComposition = workforceGenderComposition;
+      if (specializedTasks !== undefined) {
+        if (Array.isArray(specializedTasks)) {
+          service.specializedTasks = specializedTasks;
+        } else if (typeof specializedTasks === 'string') {
+          try {
+            service.specializedTasks = JSON.parse(specializedTasks);
+          } catch (e) {
+            service.specializedTasks = specializedTasks.split(',').map(t => t.trim()).filter(Boolean);
+          }
+        }
+      }
+    }
 
     // Reassign providerId to current active user if editing
     service.providerId = req.user._id;
@@ -177,7 +233,7 @@ router.put('/services/:id', upload.single('image'), async (req, res) => {
 
     if (userLat && userLng) {
       service.location = { latitude: Number(userLat), longitude: Number(userLng) };
-    } else if (!service.location || !service.location.latitude) {
+    } else {
       service.location = getCoordinatesForDistrict(service.district);
     }
 
@@ -186,7 +242,8 @@ router.put('/services/:id', upload.single('image'), async (req, res) => {
       if (service.imageUrl) {
         safeDeleteUploadFile(service.imageUrl);
       }
-      service.imageUrl = `/uploads/${req.file.filename}`;
+      const subfolder = isWorkforce ? 'workers' : 'equipment';
+      service.imageUrl = `/uploads/${subfolder}/${req.file.filename}`;
     }
 
     const updatedService = await service.save();
@@ -205,7 +262,7 @@ router.put('/services/:id', upload.single('image'), async (req, res) => {
   }
 });
 
-// @desc    Delete a service listing & delete image file from disk
+// @desc    Delete a service listing permanently & remove physical image file from disk
 // @route   DELETE /api/provider/services/:id
 // @access  Private (Provider)
 router.delete('/services/:id', async (req, res) => {
@@ -228,7 +285,7 @@ router.delete('/services/:id', async (req, res) => {
 
     return res.json({
       success: true,
-      message: 'Service deleted successfully',
+      message: 'Service document permanently removed from MongoDB and image deleted from disk',
       id: req.params.id
     });
   } catch (error) {

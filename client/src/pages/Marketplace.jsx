@@ -3,6 +3,7 @@ import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import { APP_CONFIG, formatRupees } from '../config/appName';
 import { calculateHaversineDistance, getDistrictCoordinates } from '../utils/distance';
+import { BookingModal } from '../components/BookingModal';
 import { 
   Tractor, 
   Search, 
@@ -56,6 +57,8 @@ export const Marketplace = () => {
   const [maxPrice, setMaxPrice] = useState(5000);
   const [maxDistanceKm, setMaxDistanceKm] = useState(16);
   const [onlyAvailable, setOnlyAvailable] = useState(false);
+  const [selectedWorkforceType, setSelectedWorkforceType] = useState('all');
+  const [selectedSpecialization, setSelectedSpecialization] = useState('all');
 
   // Booking Modal State
   const [selectedService, setSelectedService] = useState(null);
@@ -183,20 +186,26 @@ export const Marketplace = () => {
     return rawServices
       .map((service) => {
         const fallbackCoords = getDistrictCoordinates(service.district || service.providerId?.district || selectedDistrict);
-        const pLat = (service.location && typeof service.location.latitude === 'number')
-          ? service.location.latitude
-          : (service.providerId?.location && typeof service.providerId.location.latitude === 'number')
-          ? service.providerId.location.latitude
-          : fallbackCoords.latitude;
+        
+        let pLat = fallbackCoords.latitude;
+        let pLng = fallbackCoords.longitude;
 
-        const pLng = (service.location && typeof service.location.longitude === 'number')
-          ? service.location.longitude
-          : (service.providerId?.location && typeof service.providerId.location.longitude === 'number')
-          ? service.providerId.location.longitude
-          : fallbackCoords.longitude;
+        if (service.location && typeof service.location.latitude === 'number' && typeof service.location.longitude === 'number') {
+          const rawLat = service.location.latitude;
+          const rawLng = service.location.longitude;
+          const devKm = calculateHaversineDistance(fallbackCoords.latitude, fallbackCoords.longitude, rawLat, rawLng);
+          if (devKm <= 30) {
+            pLat = rawLat;
+            pLng = rawLng;
+          }
+        }
 
-        // Mathematical Haversine Distance Calculation
-        const distKm = calculateHaversineDistance(cLat, cLng, pLat, pLng);
+        let distKm = calculateHaversineDistance(cLat, cLng, pLat, pLng);
+
+        // If distance is from backend sObj, use smaller or accurate distance
+        if (typeof service.distanceKm === 'number' && service.distanceKm >= 0 && service.distanceKm < distKm) {
+          distKm = service.distanceKm;
+        }
 
         return {
           ...service,
@@ -206,15 +215,37 @@ export const Marketplace = () => {
       .filter((service) => {
         if (onlyAvailable && service.status !== 'available') return false;
         if (maxPrice && service.priceInRupees > maxPrice) return false;
-        // Include listings within chosen distance range + 5 KM buffer (e.g. 16 KM selected -> up to 21 KM)
+        
+        // If distance slider is set (e.g. 16 km), allow +5 km buffer; if service is in same district, keep in range
         const effectiveMaxDistance = Number(maxDistanceKm) + 5;
-        if (effectiveMaxDistance && service.distanceKm > effectiveMaxDistance) return false;
+        const sDistrict = service.district || service.providerId?.district;
+        const isSameDistrict = sDistrict && selectedDistrict && sDistrict.toLowerCase() === selectedDistrict.toLowerCase();
+        
+        if (!isSameDistrict && effectiveMaxDistance && service.distanceKm > effectiveMaxDistance) {
+          return false;
+        }
+
+        // Category Tab Filtering
+        if (selectedCategory !== 'all') {
+          if (selectedCategory === 'Machinery & Farm Equipment') {
+            if (service.category !== 'Machinery & Farm Equipment' && service.category !== 'machine') return false;
+          } else if (selectedCategory === 'Agricultural Skilled Workforce') {
+            if (service.category !== 'Agricultural Skilled Workforce' && service.category !== 'human_labor') return false;
+          }
+        }
+
+        // Secondary Workforce Filtering
+        if (selectedCategory === 'Agricultural Skilled Workforce' || service.category === 'Agricultural Skilled Workforce' || service.category === 'human_labor') {
+          if (selectedWorkforceType !== 'all' && service.workforceType !== selectedWorkforceType) return false;
+          if (selectedSpecialization !== 'all' && (!service.specializedTasks || !service.specializedTasks.includes(selectedSpecialization))) return false;
+        }
+
         return true;
       })
       // Sort by distance ASCENDING (closest service providers recommended first!)
       .sort((a, b) => a.distanceKm - b.distanceKm);
 
-  }, [rawServices, clientLocation, maxPrice, maxDistanceKm, onlyAvailable]);
+  }, [rawServices, clientLocation, selectedDistrict, maxPrice, maxDistanceKm, onlyAvailable, selectedCategory, selectedWorkforceType, selectedSpecialization]);
 
   // Reset Filters
   const handleResetFilters = () => {
@@ -222,6 +253,8 @@ export const Marketplace = () => {
     setSelectedTaskType('all');
     setSelectedCategory('all');
     setSelectedPricingUnit('all');
+    setSelectedWorkforceType('all');
+    setSelectedSpecialization('all');
     setMaxPrice(5000);
     setMaxDistanceKm(16);
     setOnlyAvailable(false);
@@ -374,6 +407,45 @@ export const Marketplace = () => {
         </div>
       </div>
 
+      {/* Primary Category Navigation Tabs */}
+      <div className="flex items-center space-x-2 border-b border-slate-200/80 pb-3">
+        <button
+          onClick={() => setSelectedCategory('all')}
+          className={`flex items-center space-x-2 px-5 py-3 rounded-2xl text-xs font-black transition-all ${
+            selectedCategory === 'all'
+              ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/20'
+              : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200'
+          }`}
+        >
+          <span>🌐 All Services</span>
+        </button>
+
+        <button
+          onClick={() => setSelectedCategory('Machinery & Farm Equipment')}
+          className={`flex items-center space-x-2 px-5 py-3 rounded-2xl text-xs font-black transition-all ${
+            selectedCategory === 'Machinery & Farm Equipment' || selectedCategory === 'machine'
+              ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/20'
+              : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200'
+          }`}
+        >
+          <Tractor className="w-4 h-4 text-amber-400" />
+          <span>Machinery & Farm Equipment</span>
+        </button>
+
+        <button
+          onClick={() => setSelectedCategory('Agricultural Skilled Workforce')}
+          className={`flex items-center space-x-2 px-5 py-3 rounded-2xl text-xs font-black transition-all ${
+            selectedCategory === 'Agricultural Skilled Workforce' || selectedCategory === 'human_labor'
+              ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-600/20'
+              : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200'
+          }`}
+        >
+          <User className="w-4 h-4 text-amber-300" />
+          <span>Agricultural Skilled Workforce</span>
+          <span className="bg-emerald-100 text-emerald-800 text-[10px] px-2 py-0.5 rounded-full font-black border border-emerald-300 ml-1">0% Commission</span>
+        </button>
+      </div>
+
       {/* Task Type Filter Pills */}
       <div className="flex items-center space-x-2 overflow-x-auto pb-2 scrollbar-none">
         {taskTypes.map((task) => (
@@ -418,8 +490,8 @@ export const Marketplace = () => {
               className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 font-bold focus:outline-hidden focus:border-indigo-600"
             >
               <option value="all">All Categories</option>
-              <option value="machine">Machinery Only 🚜</option>
-              <option value="human_labor">Human Labor Teams 👨‍🌾</option>
+              <option value="Machinery & Farm Equipment">Machinery & Farm Equipment 🚜</option>
+              <option value="Agricultural Skilled Workforce">Agricultural Skilled Workforce 👨‍🌾 (0% Commission)</option>
             </select>
           </div>
 
@@ -435,6 +507,8 @@ export const Marketplace = () => {
               <option value="per_hour">Per Hour (₹/hr)</option>
               <option value="per_acre">Per Acre (₹/acre)</option>
               <option value="per_day">Per Day (₹/day)</option>
+              <option value="per_worker_day">Per Worker Day (₹/worker/day)</option>
+              <option value="per_group_acre">Per Group Acre (₹/team/acre)</option>
             </select>
           </div>
 
@@ -473,6 +547,42 @@ export const Marketplace = () => {
           </div>
 
         </div>
+
+        {/* Secondary Workforce Filters Bar (Visible when Workforce category active) */}
+        {(selectedCategory === 'Agricultural Skilled Workforce' || selectedCategory === 'human_labor') && (
+          <div className="pt-3 border-t border-slate-100 grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs font-semibold bg-emerald-50/50 p-3 rounded-2xl border border-emerald-100">
+            <div>
+              <label className="block text-emerald-800 font-bold mb-1">Workforce Structure</label>
+              <select
+                value={selectedWorkforceType}
+                onChange={(e) => setSelectedWorkforceType(e.target.value)}
+                className="w-full px-3 py-2 bg-white border border-emerald-200 rounded-xl text-slate-800 font-bold focus:outline-hidden focus:border-emerald-600"
+              >
+                <option value="all">All Workforce Types</option>
+                <option value="Individual Worker">Individual Worker 👤</option>
+                <option value="Workgroup Team">Workgroup Team 👥</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-emerald-800 font-bold mb-1">Specialized Field Task</label>
+              <select
+                value={selectedSpecialization}
+                onChange={(e) => setSelectedSpecialization(e.target.value)}
+                className="w-full px-3 py-2 bg-white border border-emerald-200 rounded-xl text-slate-800 font-bold focus:outline-hidden focus:border-emerald-600"
+              >
+                <option value="all">All Field Specializations</option>
+                <option value="Paddy Transplanting">Paddy Transplanting 🌾</option>
+                <option value="Manual Weeding">Manual Weeding 🌱</option>
+                <option value="Cotton Picking">Cotton Picking ☁️</option>
+                <option value="Sugarcane Harvesting">Sugarcane Harvesting 🎋</option>
+                <option value="Chilli Harvesting">Chilli Harvesting 🌶️</option>
+                <option value="Pesticide Spraying">Pesticide Spraying 💦</option>
+                <option value="Fruit & Grain Bundling">Fruit & Grain Bundling 📦</option>
+              </select>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Results Header */}
@@ -518,9 +628,12 @@ export const Marketplace = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {processedServices.map((service) => {
             const isAvailable = service.status === 'available';
+            const isWorkforce = service.category === 'Agricultural Skilled Workforce' || service.category === 'human_labor';
             const unitLabel = 
               service.pricingUnit === 'per_hour' ? '/ hr' :
-              service.pricingUnit === 'per_acre' ? '/ acre' : '/ day';
+              service.pricingUnit === 'per_acre' ? '/ acre' :
+              service.pricingUnit === 'per_worker_day' ? '/ worker / day' :
+              service.pricingUnit === 'per_group_acre' ? '/ team / acre' : '/ day';
 
             return (
               <div
@@ -545,17 +658,23 @@ export const Marketplace = () => {
                     style={{ display: service.imageUrl ? 'none' : 'flex' }}
                     className="w-full h-full bg-gradient-to-br from-indigo-50 to-sky-100 flex-col items-center justify-center text-indigo-300"
                   >
-                    <Tractor className="w-16 h-16 opacity-60 mb-1" />
-                    <span className="text-[11px] font-bold text-indigo-400">Equipment Listing</span>
+                    {isWorkforce ? (
+                      <User className="w-16 h-16 opacity-60 mb-1" />
+                    ) : (
+                      <Tractor className="w-16 h-16 opacity-60 mb-1" />
+                    )}
+                    <span className="text-[11px] font-bold text-indigo-400">
+                      {isWorkforce ? 'Workforce Listing' : 'Equipment Listing'}
+                    </span>
                   </div>
 
                   {/* Category Badge overlay */}
                   <span className={`absolute top-3 left-3 text-[10px] font-extrabold uppercase px-2.5 py-1 rounded-full backdrop-blur-md shadow-xs ${
-                    service.category === 'machine'
-                      ? 'bg-indigo-900/80 text-white border border-indigo-500/30'
-                      : 'bg-amber-900/80 text-white border border-amber-500/30'
+                    isWorkforce
+                      ? 'bg-emerald-900/80 text-emerald-100 border border-emerald-500/30'
+                      : 'bg-indigo-900/80 text-white border border-indigo-500/30'
                   }`}>
-                    {service.category === 'machine' ? '🚜 Machinery' : '👨‍🌾 Human Labor'}
+                    {isWorkforce ? '👨‍🌾 Skilled Workforce' : '🚜 Machinery'}
                   </span>
 
                   {/* Availability Badge overlay */}
@@ -578,12 +697,39 @@ export const Marketplace = () => {
                       {service.title}
                     </h3>
 
-                    {/* Task Type Badge */}
-                    <div className="flex items-center space-x-2">
+                    {/* Task Type Badge & 0% Commission Badge */}
+                    <div className="flex flex-wrap items-center gap-1.5">
                       <span className="text-[11px] font-bold bg-slate-100 text-slate-700 px-2.5 py-0.5 rounded-lg capitalize">
                         Task: {service.taskType}
                       </span>
+                      {isWorkforce && (
+                        <span className="text-[10px] font-black bg-emerald-100 text-emerald-800 border border-emerald-300 px-2 py-0.5 rounded-lg">
+                          ⚡ 0% Admin Fee
+                        </span>
+                      )}
                     </div>
+
+                    {/* Workforce Specific Metadata */}
+                    {isWorkforce && (
+                      <div className="bg-emerald-50/70 border border-emerald-100 p-2.5 rounded-xl text-xs space-y-1">
+                        <div className="flex items-center justify-between text-emerald-900 font-bold">
+                          <span>{service.workforceType || 'Skilled Team'}</span>
+                          <span>{service.workerCount > 1 ? `${service.workerCount} Workers` : '1 Worker'}</span>
+                        </div>
+                        {service.workforceGenderComposition && (
+                          <span className="text-[11px] text-emerald-700 block">Composition: {service.workforceGenderComposition}</span>
+                        )}
+                        {service.specializedTasks && service.specializedTasks.length > 0 && (
+                          <div className="flex flex-wrap gap-1 pt-1">
+                            {service.specializedTasks.map((st, i) => (
+                              <span key={i} className="text-[9px] bg-white text-emerald-800 font-semibold px-1.5 py-0.5 rounded border border-emerald-200">
+                                {st}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
 
                     {/* Distance & Location Info */}
                     <div className="space-y-1 pt-1 text-xs">
@@ -617,9 +763,13 @@ export const Marketplace = () => {
 
                     <button
                       onClick={() => handleOpenBooking(service)}
-                      className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-4 py-2.5 rounded-2xl text-xs shadow-md shadow-indigo-600/20 transition-all flex items-center space-x-1.5"
+                      className={`font-bold px-4 py-2.5 rounded-2xl text-xs shadow-md transition-all flex items-center space-x-1.5 text-white ${
+                        isWorkforce
+                          ? 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-600/20'
+                          : 'bg-indigo-600 hover:bg-indigo-700 shadow-indigo-600/20'
+                      }`}
                     >
-                      <span>Rent Now</span>
+                      <span>{isWorkforce ? 'Book Workforce' : 'Rent Now'}</span>
                     </button>
                   </div>
 
@@ -631,365 +781,16 @@ export const Marketplace = () => {
         </div>
       )}
 
-      {/* Booking Dialog Modal */}
+      {/* Booking Dialog Modal Component */}
       {selectedService && (
-        <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4">
-          <div className="bg-white rounded-3xl shadow-2xl max-w-lg w-full overflow-hidden border border-slate-200 flex flex-col max-h-[90vh]">
-            
-            {/* Modal Header (Fixed at top) */}
-            <div className="bg-gradient-to-r from-indigo-700 to-sky-700 px-5 py-4 text-white flex items-center justify-between shrink-0">
-              <div className="flex items-center space-x-2">
-                <Tractor className="w-5 h-5 text-amber-300" />
-                <h3 className="font-bold text-base">Service Booking & Payment Checkout</h3>
-              </div>
-              <button
-                onClick={() => setSelectedService(null)}
-                className="p-1 rounded-lg text-white/80 hover:text-white hover:bg-white/10"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            {/* Modal Content Body (Scrolls cleanly within max-h-[90vh]) */}
-            <div className="overflow-y-auto flex-1">
-              {bookingSuccess ? (
-                <div className="p-6 text-center space-y-3">
-                  <div className={`p-3.5 rounded-full w-fit mx-auto animate-bounce ${submittedPaymentStatus === 'advance_paid' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>
-                    <CheckCircle className="w-9 h-9" />
-                  </div>
-                  <h3 className="font-bold text-slate-900 text-base">
-                    {submittedPaymentStatus === 'advance_paid' ? '✓ 20% Advance Payment Verified!' : '📋 Booking Request Submitted!'}
-                  </h3>
-                  <p className="text-xs text-slate-500 max-w-sm mx-auto">
-                    {submittedPaymentStatus === 'advance_paid'
-                      ? `Your 20% advance payment has been verified. The equipment provider receives your confirmed rental booking request.`
-                      : `Your rental request is sent to the provider with 20% Advance status set to Pending. You can complete payment upon provider arrival.`}
-                  </p>
-                </div>
-              ) : bookingStep === 'payment' ? (
-                (() => {
-                  const totalCost = (selectedService.priceInRupees || 0) * acresOrHours;
-                  const advanceAmount = Math.round(totalCost * 0.20);
-                  const adminCommission = Math.round(totalCost * 0.05);
-                  const providerDisbursement = Math.round(totalCost * 0.15);
-                  const adminUpiId = '9030585591@ybl';
-                  const payeeName = 'K PALANI';
-                  const formattedAdvanceAmount = Number(advanceAmount).toFixed(2);
-                  const upiNote = `AgriRenta 20% Advance for ${selectedService.title}`;
-                  
-                  // Construct standard NPCI-compliant UPI deep link (Rule 1)
-                  const upiDeepLink = `upi://pay?pa=${encodeURIComponent(adminUpiId)}&pn=${encodeURIComponent(payeeName)}&am=${formattedAdvanceAmount}&cu=INR&tn=${encodeURIComponent(upiNote)}`;
-                  const dynamicQrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(upiDeepLink)}`;
-
-                  return (
-                    <div className="p-4 sm:p-5 space-y-3.5">
-                      
-                      {/* Payment Gateway Header Banner */}
-                      <div className="bg-slate-50 border border-slate-200 p-3 rounded-2xl space-y-1">
-                        <div className="flex items-center justify-between">
-                          <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-md bg-indigo-100 text-indigo-700">
-                            🛡️ Admin Dynamic UPI Escrow Gateway
-                          </span>
-                          <span className="text-xs font-black text-emerald-700">
-                            20% Advance: {formatRupees(advanceAmount)}
-                          </span>
-                        </div>
-                        <h4 className="font-bold text-slate-900 text-xs">Scan Dynamic QR Code to Pay Pre-Populated Amount</h4>
-                        <p className="text-[11px] text-slate-500">
-                          Scanning automatically fills <strong>{formatRupees(advanceAmount)}</strong> in your UPI payment app!
-                        </p>
-                      </div>
-
-                      {/* Escrow & Financial Revenue Breakdown Card */}
-                      <div className="bg-indigo-50/70 border border-indigo-100 p-3 rounded-2xl text-xs space-y-1.5">
-                        <div className="flex items-center justify-between">
-                          <span className="text-slate-600 font-medium">Total Rental Service Cost:</span>
-                          <span className="font-extrabold text-slate-900">{formatRupees(totalCost)}</span>
-                        </div>
-                        <div className="flex items-center justify-between font-bold text-emerald-800 pt-1 border-t border-indigo-200/60">
-                          <span>Required 20% Advance Payable Now:</span>
-                          <span className="text-xs font-black">{formatRupees(advanceAmount)}</span>
-                        </div>
-                        <div className="grid grid-cols-2 gap-2 pt-1 border-t border-indigo-200/60 text-[10px]">
-                          <div className="bg-white p-1.5 rounded-xl border border-indigo-100">
-                            <span className="text-slate-400 font-medium block">Admin Commission (5%):</span>
-                            <span className="font-bold text-indigo-700">{formatRupees(adminCommission)}</span>
-                          </div>
-                          <div className="bg-white p-1.5 rounded-xl border border-indigo-100">
-                            <span className="text-slate-400 font-medium block">Provider Escrow (15%):</span>
-                            <span className="font-bold text-emerald-700">{formatRupees(providerDisbursement)}</span>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Prominently Emphasized 20% Payable Advance Amount Banner */}
-                      <div className="bg-gradient-to-r from-emerald-600 to-teal-700 text-white rounded-2xl p-3 text-center shadow-xs space-y-0.5">
-                        <span className="text-[10px] uppercase font-extrabold tracking-wider text-emerald-100 block">
-                          Payable 20% Advance Amount
-                        </span>
-                        <span className="text-2xl font-black tracking-tight block">
-                          {formatRupees(advanceAmount)}
-                        </span>
-                        <span className="text-[10px] text-emerald-100 font-medium block">
-                          Scan QR code below with GPay, PhonePe, Paytm, or BHIM
-                        </span>
-                      </div>
-
-                      {/* Dynamic Auto-Populated UPI QR Code Display */}
-                      <div className="bg-gradient-to-br from-indigo-50/50 to-sky-50/50 border border-indigo-100 p-4 rounded-2xl text-center space-y-2.5">
-                        <div className="flex items-center justify-center">
-                          <div className="bg-white p-3 rounded-2xl shadow-xs border border-slate-200">
-                            <img
-                              src={dynamicQrUrl}
-                              alt="Dynamic Auto-Populated UPI QR Code"
-                              className="w-40 h-40 mx-auto object-contain"
-                            />
-                            <span className="text-[10px] text-emerald-700 font-black block mt-1">
-                              ✓ Dynamic Pay QR (Auto-Fills ₹{formattedAdvanceAmount})
-                            </span>
-                          </div>
-                        </div>
-
-                        <div className="space-y-0.5">
-                          <p className="text-[11px] text-slate-500 font-medium">Verified Admin Escrow Payee:</p>
-                          <div className="flex items-center justify-center space-x-2 bg-white px-3 py-1 rounded-xl border border-slate-200 w-fit mx-auto shadow-2xs">
-                            <span className="font-mono text-[11px] font-black text-indigo-900">{payeeName} ({adminUpiId})</span>
-                          </div>
-                        </div>
-
-                        {/* Direct App Link */}
-                        <a
-                          href={upiDeepLink}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center justify-center space-x-2 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white font-extrabold py-2.5 px-4 rounded-2xl text-xs shadow-xs transition-all w-full mt-1"
-                        >
-                          <Wallet className="w-4 h-4 text-amber-300" />
-                          <span>Pay ₹{advanceAmount} via GPay / PhonePe / Paytm App 📱</span>
-                        </a>
-                      </div>
-
-                      {/* Optional UTR / Reference Input */}
-                      <div>
-                        <label className="block text-[11px] font-bold text-slate-700 mb-1">
-                          UPI Transaction UTR / Ref No. (Optional Verification)
-                        </label>
-                        <input
-                          type="text"
-                          placeholder="e.g. 324156789012"
-                          value={transactionRef}
-                          onChange={(e) => setTransactionRef(e.target.value)}
-                          className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono focus:outline-hidden focus:border-indigo-600"
-                        />
-                      </div>
-
-                      {/* Verification Actions */}
-                      <div className="space-y-1.5 pt-1">
-                        <button
-                          type="button"
-                          disabled={submittingBooking}
-                          onClick={() => executeBookingSubmission('advance_paid')}
-                          className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold py-2.5 rounded-2xl text-xs shadow-xs disabled:opacity-50 flex items-center justify-center space-x-1.5"
-                        >
-                          <CheckCircle className="w-4 h-4" />
-                          <span>{submittingBooking ? 'Verifying Payment...' : `I Have Paid 20% Advance (${formatRupees(Math.round((selectedService.priceInRupees || 0) * acresOrHours * 0.20))})`}</span>
-                        </button>
-
-                        <button
-                          type="button"
-                          disabled={submittingBooking}
-                          onClick={() => executeBookingSubmission('pending')}
-                          className="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-2 rounded-2xl text-xs border border-slate-300 disabled:opacity-50"
-                        >
-                          Skip Online Payment (Mark Advance as Pending)
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={() => setBookingStep('details')}
-                          className="w-full text-[11px] font-bold text-indigo-600 hover:underline pt-0.5"
-                        >
-                          ← Back to Service & Date Details
-                        </button>
-                      </div>
-
-                    </div>
-                  );
-                })()
-              ) : (
-                <form onSubmit={handleConfirmBooking} className="p-4 sm:p-5 space-y-4">
-                
-                {/* Equipment Summary Card */}
-                <div className="bg-slate-50 border border-slate-200 p-4 rounded-2xl space-y-1">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-md bg-indigo-100 text-indigo-700">
-                      {selectedService.category === 'machine' ? 'Machinery' : 'Human Labor'}
-                    </span>
-                    <span className="text-xs font-bold text-slate-600">
-                      ₹{selectedService.priceInRupees} / {selectedService.pricingUnit === 'per_acre' ? 'acre' : selectedService.pricingUnit === 'per_hour' ? 'hr' : 'day'}
-                    </span>
-                  </div>
-                  <h4 className="font-bold text-slate-900 text-sm mt-1">{selectedService.title}</h4>
-                  <p className="text-xs text-slate-500">
-                    Provider Location: <strong>{selectedService.village || selectedService.providerId?.village}, {selectedService.district || selectedService.providerId?.district}</strong> ({selectedService.distanceKm} km away)
-                  </p>
-                </div>
-
-                {/* Date Selection & Weather Guard Integration Banner */}
-                <div className="space-y-2">
-                  <label className="block text-xs font-bold text-slate-700">
-                    Select Rental Date
-                  </label>
-                  <input
-                    type="date"
-                    required
-                    value={bookingDate}
-                    onChange={(e) => setBookingDate(e.target.value)}
-                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-semibold focus:outline-hidden focus:border-indigo-600"
-                  />
-
-                  {/* Weather Guard Alert Banner */}
-                  {weatherAlert.loading ? (
-                    <div className="p-3 bg-sky-50 border border-sky-200 rounded-2xl text-xs text-sky-700 flex items-center space-x-2 animate-pulse">
-                      <CloudRain className="w-4 h-4 text-sky-600 shrink-0" />
-                      <span>Weather Guard: Verifying forecast for selected date...</span>
-                    </div>
-                  ) : weatherAlert.hasAlert ? (
-                    <div className="p-3.5 bg-amber-50 border border-amber-300 rounded-2xl text-xs text-amber-900 space-y-1">
-                      <div className="flex items-center space-x-1.5 font-extrabold text-amber-700">
-                        <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
-                        <span>Weather Guard: Extreme Weather Forecasted!</span>
-                      </div>
-                      <p className="text-[11px] leading-relaxed text-amber-800">
-                        {weatherAlert.warningMessage || `High wind speeds (${weatherAlert.windSpeedKmh} km/h) & condition (${weatherAlert.condition}) predicted. Renting on this date may experience weather delays.`}
-                      </p>
-                    </div>
-                  ) : (
-                    <div className="p-2.5 bg-emerald-50 border border-emerald-200 rounded-2xl text-xs text-emerald-800 flex items-center space-x-2">
-                      <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
-                      <span>Weather Guard: Clear sky forecast ({weatherAlert.condition || 'Favorable Weather'}) for field operations.</span>
-                    </div>
-                  )}
-                </div>
-
-                {/* Work Estimator (Land Area Acres / Hours Input) */}
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">
-                    Work Estimator ({selectedService.pricingUnit === 'per_acre' ? 'Land Area in Acres' : selectedService.pricingUnit === 'per_hour' ? 'Duration in Hours' : 'Number of Days'})
-                  </label>
-                  <div className="relative">
-                    <input
-                      type="number"
-                      min="1"
-                      max="100"
-                      required
-                      value={acresOrHours}
-                      onChange={(e) => setAcresOrHours(Math.max(1, Number(e.target.value)))}
-                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-semibold focus:outline-hidden focus:border-indigo-600"
-                    />
-                    <span className="absolute right-3.5 top-2.5 text-xs font-bold text-slate-400">
-                      {selectedService.pricingUnit === 'per_acre' ? 'Acres' : selectedService.pricingUnit === 'per_hour' ? 'Hours' : 'Days'}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Pricing & 20% Advance Calculation Card */}
-                {(() => {
-                  const total = (selectedService.priceInRupees || 0) * acresOrHours;
-                  const advance = Math.round(total * 0.20);
-                  const balance = total - advance;
-
-                  return (
-                    <div className="bg-gradient-to-br from-indigo-50 to-sky-50 border border-indigo-100 p-4 rounded-2xl space-y-2">
-                      <div className="flex items-center justify-between text-xs text-slate-600 font-medium">
-                        <span>Total Rental Fee:</span>
-                        <span className="font-bold text-slate-900">{formatRupees(total)}</span>
-                      </div>
-
-                      <div className="flex items-center justify-between text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-3 py-1.5 rounded-xl">
-                        <span>Required 20% Advance Payable Now:</span>
-                        <span className="text-sm font-black text-emerald-800">{formatRupees(advance)}</span>
-                      </div>
-
-                      <div className="flex items-center justify-between text-[11px] text-slate-500 font-medium pt-1">
-                        <span>Remaining Balance Payable at Field:</span>
-                        <span className="font-bold text-slate-700">{formatRupees(balance)}</span>
-                      </div>
-                    </div>
-                  );
-                })()}
-
-                {/* Payment Method Selector */}
-                <div className="space-y-2">
-                  <label className="block text-xs font-bold text-slate-700">
-                    Payment Method (20% Advance Checkout)
-                  </label>
-                  <div className="grid grid-cols-3 gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setPaymentMethod('upi')}
-                      className={`p-3 rounded-2xl border text-center text-xs font-bold transition-all flex flex-col items-center justify-center gap-1 ${
-                        paymentMethod === 'upi'
-                          ? 'bg-indigo-600 text-white border-indigo-600 shadow-md shadow-indigo-600/20'
-                          : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
-                      }`}
-                    >
-                      <Wallet className="w-4 h-4" />
-                      <span>UPI / GPay</span>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => setPaymentMethod('razorpay')}
-                      className={`p-3 rounded-2xl border text-center text-xs font-bold transition-all flex flex-col items-center justify-center gap-1 ${
-                        paymentMethod === 'razorpay'
-                          ? 'bg-indigo-600 text-white border-indigo-600 shadow-md shadow-indigo-600/20'
-                          : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
-                      }`}
-                    >
-                      <CreditCard className="w-4 h-4" />
-                      <span>Razorpay</span>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => setPaymentMethod('cod')}
-                      className={`p-3 rounded-2xl border text-center text-xs font-bold transition-all flex flex-col items-center justify-center gap-1 ${
-                        paymentMethod === 'cod'
-                          ? 'bg-indigo-600 text-white border-indigo-600 shadow-md shadow-indigo-600/20'
-                          : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
-                      }`}
-                    >
-                      <Banknote className="w-4 h-4" />
-                      <span>COD Cash</span>
-                    </button>
-                  </div>
-                </div>
-
-                {/* Action Buttons */}
-                <div className="pt-2 flex items-center justify-end space-x-3">
-                  <button
-                    type="button"
-                    onClick={() => setSelectedService(null)}
-                    className="px-4 py-2.5 rounded-2xl text-xs font-bold text-slate-600 hover:bg-slate-100"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={submittingBooking}
-                    className="bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold px-5 py-2.5 rounded-2xl text-xs shadow-md shadow-indigo-600/20 disabled:opacity-50 flex items-center space-x-1.5"
-                  >
-                    <span>{paymentMethod === 'cod' ? 'Confirm Booking (Cash / Pending)' : `Proceed to Pay 20% Advance (${formatRupees(Math.round((selectedService.priceInRupees || 0) * acresOrHours * 0.20))}) →`}</span>
-                  </button>
-                </div>
-
-              </form>
-            )}
-            </div>
-
-          </div>
-        </div>
+        <BookingModal
+          selectedService={selectedService}
+          onClose={() => setSelectedService(null)}
+          clientLocation={clientLocation}
+          selectedDistrict={selectedDistrict}
+          user={user}
+          onSuccess={fetchServices}
+        />
       )}
 
     </div>

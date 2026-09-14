@@ -84,7 +84,7 @@ export const Sidebar = ({ isOpen, onClose }) => {
 
       {/* Sidebar Panel */}
       <aside
-        className={`fixed lg:static top-16 bottom-0 left-0 z-40 w-64 bg-white border-r border-slate-200/80 flex flex-col transition-transform duration-200 ease-in-out ${
+        className={`fixed lg:sticky top-16 h-[calc(100vh-4rem)] left-0 z-30 lg:z-20 w-64 shrink-0 bg-white border-r border-slate-200/80 flex flex-col transition-transform duration-200 ease-in-out ${
           isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
         }`}
       >

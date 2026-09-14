@@ -93,11 +93,11 @@ export const MyBookingsPage = () => {
 
   // Filter bookings for tabs
   const activeBookings = bookings.filter(
-    (b) => b.status !== 'completed' && b.status !== 'rejected' && b.status !== 'cancelled'
+    (b) => !b.jobCompletedByFarmer && b.status !== 'rejected' && b.status !== 'cancelled'
   );
   
   const historyBookings = bookings.filter(
-    (b) => b.status === 'completed' || b.status === 'rejected' || b.status === 'cancelled'
+    (b) => b.jobCompletedByFarmer || b.status === 'rejected' || b.status === 'cancelled'
   );
 
   const currentDisplayList = activeTab === 'active' ? activeBookings : historyBookings;
@@ -307,8 +307,8 @@ export const MyBookingsPage = () => {
                   </div>
                 </div>
 
-                {/* Active Tab Action Banner: Confirm Job Completion */}
-                {activeTab === 'active' && (
+                {/* Job Completion Action Banner for Service Seeker */}
+                {b.status !== 'rejected' && b.status !== 'cancelled' && (
                   <div>
                     {b.jobCompletedByFarmer ? (
                       <div className="bg-emerald-50 border border-emerald-200 p-3 rounded-2xl text-xs text-emerald-800 flex items-center justify-between">
@@ -320,6 +320,13 @@ export const MyBookingsPage = () => {
                           {b.paymentStatus === 'completed' ? 'Status: Completed' : 'Pending Admin Release'}
                         </span>
                       </div>
+                    ) : b.status === 'pending' ? (
+                      <div className="bg-amber-50 border border-amber-200 p-3 rounded-2xl text-xs text-amber-800 flex items-center justify-between">
+                        <span className="font-semibold flex items-center gap-1.5">
+                          <Clock className="w-4 h-4 text-amber-600 shrink-0" />
+                          <span>Waiting for service provider to accept booking request...</span>
+                        </span>
+                      </div>
                     ) : (
                       <div className="bg-amber-50/90 border border-amber-300 p-3.5 rounded-2xl text-xs text-amber-900 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
                         <div className="space-y-0.5">
@@ -328,7 +335,7 @@ export const MyBookingsPage = () => {
                             <span>Confirm Service Completion</span>
                           </p>
                           <p className="text-[11px] text-amber-800">
-                            Has the service provider finished your field work? Click to mark completed. This unlocks Admin disbursement (15%) to provider and sets machinery back to available.
+                            Has the service provider or skilled workforce finished your field work? Click to mark completed. This unlocks Admin disbursement (15%) to provider.
                           </p>
                         </div>
                         <button

@@ -2,21 +2,36 @@ import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
 
-// Ensure uploads directory exists
-const uploadDir = path.join(process.cwd(), 'uploads');
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
-}
+// Ensure uploads base, equipment, and workers subdirectories exist
+const baseUploadDir = path.join(process.cwd(), 'uploads');
+const equipmentDir = path.join(baseUploadDir, 'equipment');
+const workersDir = path.join(baseUploadDir, 'workers');
 
-// Storage Configuration
+[baseUploadDir, equipmentDir, workersDir].forEach((dir) => {
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir, { recursive: true });
+  }
+});
+
+// Dynamic Storage Configuration based on Category
 const storage = multer.diskStorage({
   destination(req, file, cb) {
-    cb(null, uploadDir);
+    const isWorkforce = 
+      req.body.category === 'Agricultural Skilled Workforce' || 
+      req.body.category === 'human_labor';
+
+    const targetDir = isWorkforce ? workersDir : equipmentDir;
+    cb(null, targetDir);
   },
   filename(req, file, cb) {
+    const isWorkforce = 
+      req.body.category === 'Agricultural Skilled Workforce' || 
+      req.body.category === 'human_labor';
+
+    const prefix = isWorkforce ? 'worker' : 'equipment';
     const ext = path.extname(file.originalname);
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-    cb(null, `equipment-${uniqueSuffix}${ext}`);
+    cb(null, `${prefix}-${uniqueSuffix}${ext}`);
   }
 });
 

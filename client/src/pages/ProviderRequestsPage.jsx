@@ -271,23 +271,41 @@ export const ProviderRequestsPage = () => {
                   )}
 
                   {b.status === 'confirmed' && (
-                    <button
-                      onClick={() => handleUpdateStatus(b._id, 'en_route')}
-                      className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-4 py-2 rounded-xl text-xs shadow-xs flex items-center space-x-1"
-                    >
-                      <Tractor className="w-4 h-4" />
-                      <span>Dispatch Machinery / En Route</span>
-                    </button>
+                    <>
+                      <button
+                        onClick={() => handleUpdateStatus(b._id, 'en_route')}
+                        className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-4 py-2 rounded-xl text-xs shadow-xs flex items-center space-x-1"
+                      >
+                        <Tractor className="w-4 h-4" />
+                        <span>Dispatch / Start Work</span>
+                      </button>
+                      <button
+                        onClick={() => handleUpdateStatus(b._id, 'completed')}
+                        className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-4 py-2 rounded-xl text-xs shadow-xs flex items-center space-x-1"
+                      >
+                        <CheckCircle className="w-4 h-4" />
+                        <span>Mark Job Completed</span>
+                      </button>
+                    </>
                   )}
 
                   {b.status === 'en_route' && (
-                    <button
-                      onClick={() => handleUpdateStatus(b._id, 'arrived')}
-                      className="bg-amber-600 hover:bg-amber-700 text-white font-bold px-4 py-2 rounded-xl text-xs shadow-xs flex items-center space-x-1"
-                    >
-                      <MapPin className="w-4 h-4" />
-                      <span>Mark Arrived at Client Field</span>
-                    </button>
+                    <>
+                      <button
+                        onClick={() => handleUpdateStatus(b._id, 'arrived')}
+                        className="bg-amber-600 hover:bg-amber-700 text-white font-bold px-4 py-2 rounded-xl text-xs shadow-xs flex items-center space-x-1"
+                      >
+                        <MapPin className="w-4 h-4" />
+                        <span>Mark Arrived at Client Field</span>
+                      </button>
+                      <button
+                        onClick={() => handleUpdateStatus(b._id, 'completed')}
+                        className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-4 py-2 rounded-xl text-xs shadow-xs flex items-center space-x-1"
+                      >
+                        <CheckCircle className="w-4 h-4" />
+                        <span>Mark Job Completed</span>
+                      </button>
+                    </>
                   )}
 
                   {b.status === 'arrived' && (

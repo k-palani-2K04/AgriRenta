@@ -19,8 +19,10 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Serve uploads folder statically for raw uploaded images
+// Serve uploads folder statically for equipment and worker images
 const uploadsPath = path.join(process.cwd(), 'uploads');
+app.use('/uploads/equipment', express.static(path.join(uploadsPath, 'equipment')));
+app.use('/uploads/workers', express.static(path.join(uploadsPath, 'workers')));
 app.use('/uploads', express.static(uploadsPath));
 
 // Connect Database

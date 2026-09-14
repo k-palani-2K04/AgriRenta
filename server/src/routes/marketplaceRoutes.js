@@ -30,7 +30,18 @@ router.get('/services', async (req, res) => {
     }
 
     if (category && category !== 'all') {
-      filter.category = category;
+      // Strip emojis and normalize category search
+      const cleanCat = String(category)
+        .replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{1F700}-\u{1F77F}\u{1F780}-\u{1F7FF}\u{1F800}-\u{1F8FF}\u{1F900}-\u{1F9FF}\u{1FA00}-\u{1FA6F}\u{1FA70}-\u{1FAFF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu, '')
+        .trim();
+
+      if (cleanCat.toLowerCase().includes('machinery') || cleanCat.toLowerCase().includes('machine')) {
+        filter.category = { $in: ['Machinery & Farm Equipment', 'machine'] };
+      } else if (cleanCat.toLowerCase().includes('workforce') || cleanCat.toLowerCase().includes('labor') || cleanCat.toLowerCase().includes('human_labor')) {
+        filter.category = { $in: ['Agricultural Skilled Workforce', 'human_labor'] };
+      } else if (cleanCat) {
+        filter.category = cleanCat;
+      }
     }
 
     if (pricingUnit && pricingUnit !== 'all') {
@@ -43,11 +54,6 @@ router.get('/services', async (req, res) => {
 
     if (status && status !== 'all') {
       filter.status = status;
-    }
-
-    // Only apply hard district filter if spatial coordinates are NOT provided
-    if ((!userLat || !userLng) && district && district !== 'all') {
-      filter.district = district;
     }
 
     if (search && search.trim() !== '') {
@@ -87,17 +93,19 @@ router.get('/services', async (req, res) => {
 
       const districtFallback = getCoordinatesForDistrict(sObj.district || sObj.providerId?.district || 'Guntur');
 
-      const serviceLat = (sObj.location && typeof sObj.location.latitude === 'number')
-        ? sObj.location.latitude
-        : (sObj.providerId?.location && typeof sObj.providerId.location.latitude === 'number')
-        ? sObj.providerId.location.latitude
-        : districtFallback.latitude;
+      let serviceLat = districtFallback.latitude;
+      let serviceLng = districtFallback.longitude;
 
-      const serviceLng = (sObj.location && typeof sObj.location.longitude === 'number')
-        ? sObj.location.longitude
-        : (sObj.providerId?.location && typeof sObj.providerId.location.longitude === 'number')
-        ? sObj.providerId.location.longitude
-        : districtFallback.longitude;
+      if (sObj.location && typeof sObj.location.latitude === 'number' && typeof sObj.location.longitude === 'number') {
+        const rawLat = sObj.location.latitude;
+        const rawLng = sObj.location.longitude;
+        // Check if stored coordinates match district area (within ~30km). If stale provider profile coords were stored, override with accurate district coords
+        const devKm = calculateHaversineDistance(districtFallback.latitude, districtFallback.longitude, rawLat, rawLng);
+        if (devKm <= 30) {
+          serviceLat = rawLat;
+          serviceLng = rawLng;
+        }
+      }
 
       const distanceKm = calculateHaversineDistance(refLat, refLng, serviceLat, serviceLng);
       sObj.distanceKm = distanceKm;
@@ -108,16 +116,19 @@ router.get('/services', async (req, res) => {
       return sObj;
     });
 
-    // Apply distance filter with +5 KM range threshold buffer (e.g. 16 km selected -> up to 21 km included)
-    const baseDist = maxDistanceKm ? Number(maxDistanceKm) : 16;
-    const maxDist = baseDist + 5;
-    formattedServices = formattedServices.filter(s => s.distanceKm <= maxDist);
+    // Apply generous distance buffer on server (e.g., maxDistance + 50km or max 150km) 
+    // so client-side Haversine distance calculations have full data to filter dynamically
+    if (maxDistanceKm && !isNaN(Number(maxDistanceKm))) {
+      const baseDist = Number(maxDistanceKm);
+      const serverMaxDist = Math.max(baseDist + 50, 150); // Generous buffer to prevent accidental drop of local services
+      formattedServices = formattedServices.filter(s => s.distanceKm <= serverMaxDist || (district && (s.district === district || s.providerId?.district === district)));
+    }
 
     return res.json({
       success: true,
       count: formattedServices.length,
       refLocation: { latitude: refLat, longitude: refLng },
-      maxDistanceAppliedKm: maxDist,
+      maxDistanceAppliedKm: Number(maxDistanceKm) || 16,
       services: formattedServices
     });
   } catch (error) {

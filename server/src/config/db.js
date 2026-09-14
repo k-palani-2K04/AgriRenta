@@ -44,13 +44,13 @@ export const seedDemoUsers = async () => {
       await provider.save();
     }
 
-    // 3. Seed Demo Admin Account (Phone: 9999999999 / Password: password123)
-    let admin = await User.findOne({ phone: '9999999999' });
+    // 3. Seed Demo Admin Account (Phone: 9030585591 / Password: admin@123)
+    let admin = await User.findOne({ $or: [{ phone: '9030585591' }, { role: 'admin' }] });
     if (!admin) {
       admin = await User.create({
         name: 'AgriRenta Admin',
-        phone: '9999999999',
-        password: 'password123',
+        phone: '9030585591',
+        password: 'admin@123',
         role: 'admin',
         upiId: '9030585591@ybl',
         state: 'Andhra Pradesh',
@@ -58,7 +58,13 @@ export const seedDemoUsers = async () => {
         village: 'Guntur Central',
         location: { latitude: 16.3067, longitude: 80.4365 }
       });
-      console.log('[Seed] Demo Admin account created (9999999999)');
+      console.log('[Seed] Demo Admin account created (9030585591 / admin@123)');
+    } else {
+      admin.phone = '9030585591';
+      admin.password = 'admin@123';
+      admin.role = 'admin';
+      await admin.save();
+      console.log('[Seed] Demo Admin account synced (9030585591 / admin@123)');
     }
 
     // 3. Seed Demo Services for Provider (Only 1 single listing: Farmtrac 50 tractor With Rotavator)
