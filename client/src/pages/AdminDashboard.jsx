@@ -29,6 +29,7 @@ export const AdminDashboard = () => {
   });
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   
@@ -36,23 +37,26 @@ export const AdminDashboard = () => {
   const [selectedBookingForPayout, setSelectedBookingForPayout] = useState(null);
   const [payoutTxnRef, setPayoutTxnRef] = useState('');
   const [releasingPayout, setReleasingPayout] = useState(false);
+  const [instantPayoutId, setInstantPayoutId] = useState(null);
 
   const fetchAdminData = async () => {
     try {
       setLoading(true);
+      setError('');
       const [statsRes, bookingsRes] = await Promise.all([
         axios.get('/api/admin/stats'),
         axios.get('/api/admin/bookings')
       ]);
 
-      if (statsRes.data.success) {
+      if (statsRes.data?.success) {
         setStats(statsRes.data.stats);
       }
-      if (bookingsRes.data.success) {
+      if (bookingsRes.data?.success) {
         setBookings(bookingsRes.data.bookings || []);
       }
     } catch (err) {
       console.error('Error fetching admin data:', err);
+      setError(err.response?.data?.message || 'Failed to load Admin Escrow statistics from server.');
     } finally {
       setLoading(false);
     }
@@ -61,6 +65,24 @@ export const AdminDashboard = () => {
   useEffect(() => {
     fetchAdminData();
   }, []);
+
+  const handleInstantPayout = async (booking) => {
+    if (!window.confirm(`Send 1-click UPI payout of ${formatRupees(booking.providerPayoutAmountInRupees || booking.providerPayoutAmount || 0)} to ${booking.providerId?.upiId || '9030585591@ybl'}?`)) {
+      return;
+    }
+    setInstantPayoutId(booking._id);
+    try {
+      const res = await axios.put(`/api/admin/bookings/${booking._id}/instant-payout`);
+      if (res.data.success) {
+        alert(res.data.message);
+        fetchAdminData();
+      }
+    } catch (err) {
+      alert(err.response?.data?.message || 'Instant payout failed.');
+    } finally {
+      setInstantPayoutId(null);
+    }
+  };
 
   const handleExecutePayout = async (e) => {
     e.preventDefault();
@@ -189,6 +211,19 @@ export const AdminDashboard = () => {
           </div>
         </div>
       </div>
+
+      {/* Error Banner */}
+      {error && (
+        <div className="bg-rose-50 border border-rose-200 text-rose-800 p-4 rounded-3xl flex items-center justify-between text-xs font-semibold shadow-xs">
+          <span>⚠️ {error}</span>
+          <button
+            onClick={fetchAdminData}
+            className="bg-rose-600 hover:bg-rose-700 text-white font-bold px-3 py-1.5 rounded-xl text-xs"
+          >
+            Retry Loading
+          </button>
+        </div>
+      )}
 
       {/* Analytics KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
@@ -422,20 +457,30 @@ export const AdminDashboard = () => {
                           {isReleased ? (
                             <span className="text-[11px] font-bold text-slate-400 italic">Payout Complete</span>
                           ) : (
-                            <button
-                              onClick={() => {
-                                setSelectedBookingForPayout(b);
-                                setPayoutTxnRef(`PAYOUT_${Date.now().toString().slice(-6)}`);
-                              }}
-                              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all shadow-xs flex items-center space-x-1 ${
-                                b.jobCompletedByFarmer
-                                  ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-600/20 animate-pulse'
-                                  : 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-indigo-600/20'
-                              }`}
-                            >
-                              <Send className="w-3.5 h-3.5" />
-                              <span>Release Payout</span>
-                            </button>
+                            <div className="flex flex-col items-end gap-2">
+                              <button
+                                onClick={() => handleInstantPayout(b)}
+                                disabled={instantPayoutId === b._id}
+                                className="touch-action px-3 rounded-xl text-xs font-bold bg-amber-500 hover:bg-amber-600 text-white shadow-xs flex items-center space-x-1 disabled:opacity-50"
+                              >
+                                <Wallet className="w-3.5 h-3.5" />
+                                <span>{instantPayoutId === b._id ? 'Sending UPI...' : '1-Click Instant UPI Payout'}</span>
+                              </button>
+                              <button
+                                onClick={() => {
+                                  setSelectedBookingForPayout(b);
+                                  setPayoutTxnRef(`PAYOUT_${Date.now().toString().slice(-6)}`);
+                                }}
+                                className={`touch-action px-3 rounded-xl text-xs font-bold shadow-xs flex items-center space-x-1 ${
+                                  b.jobCompletedByFarmer
+                                    ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-600/20'
+                                    : 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-indigo-600/20'
+                                }`}
+                              >
+                                <Send className="w-3.5 h-3.5" />
+                                <span>Release Payout</span>
+                              </button>
+                            </div>
                           )}
                           <button
                             onClick={() => handleDeleteBooking(b._id)}

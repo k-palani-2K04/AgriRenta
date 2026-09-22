@@ -1,0 +1,16 @@
+{
+  "name": "agrirenta-workspace",
+  "version": "1.0.0",
+  "description": "AgriRenta - On-Demand Agricultural Machinery & Workforce Rental Platform",
+  "private": true,
+  "scripts": {
+    "setup": "npm install && npm install --prefix server && npm install --prefix client",
+    "dev": "concurrently -n \"SERVER,CLIENT\" -c \"cyan,magenta\" \"npm run dev --prefix server\" \"npm run dev --prefix client\"",
+    "build": "npm run build --prefix client",
+    "start": "npm run start --prefix server",
+    "test": "node server/test-e2e.js && node server/test-tracking.js"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}

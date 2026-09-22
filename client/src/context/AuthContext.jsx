@@ -14,12 +14,14 @@ export const AuthProvider = ({ children }) => {
 
   const [userLocation, setUserLocation] = useState(null);
 
-  // Set default axios Auth header
-  if (token) {
-    axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-  } else {
-    delete axios.defaults.headers.common['Authorization'];
-  }
+  // Set default axios Auth header cleanly in useEffect
+  useEffect(() => {
+    if (token) {
+      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+    } else {
+      delete axios.defaults.headers.common['Authorization'];
+    }
+  }, [token]);
 
   // Reverse Geocoding Helper: Converts browser GPS (lat, lng) to State & District
   const detectLiveLocation = async () => {

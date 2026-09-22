@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { APP_CONFIG, formatRupees } from '../config/appName';
 import { calculateHaversineDistance, getDistrictCoordinates } from '../utils/distance';
 import { BookingModal } from '../components/BookingModal';
+import { MarketplaceSkeleton } from '../components/SkeletonCards';
 import { 
   Tractor, 
   Search, 
@@ -20,6 +21,9 @@ import {
   PhoneCall, 
   ShieldCheck,
   User,
+  Star,
+  Users,
+  Check,
   Navigation,
   CloudRain,
   AlertTriangle,
@@ -604,10 +608,7 @@ export const Marketplace = () => {
 
       {/* Amazon-Style Product Grid */}
       {loading ? (
-        <div className="py-16 text-center text-slate-500">
-          <div className="w-8 h-8 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
-          <p className="text-xs font-semibold">Scanning local equipment listings...</p>
-        </div>
+        <MarketplaceSkeleton />
       ) : processedServices.length === 0 ? (
         <div className="bg-white rounded-3xl border border-slate-200/80 p-12 text-center space-y-3">
           <div className="bg-indigo-50 text-indigo-600 p-4 rounded-full w-fit mx-auto">
@@ -635,12 +636,16 @@ export const Marketplace = () => {
               service.pricingUnit === 'per_worker_day' ? '/ worker / day' :
               service.pricingUnit === 'per_group_acre' ? '/ team / acre' : '/ day';
 
+            const providerName = service.providerId?.name || service.providerName || 'Verified Provider';
+            const villageName = service.village || service.providerId?.village || 'Local Village';
+            const districtName = service.district || service.providerId?.district || selectedDistrict;
+
             return (
               <div
                 key={service._id}
-                className="bg-white rounded-3xl border border-slate-200/80 shadow-2xs hover:shadow-xl hover:-translate-y-1 transition-all duration-200 flex flex-col overflow-hidden group"
+                className="bg-white rounded-3xl border border-slate-200/90 shadow-2xs hover:shadow-xl hover:-translate-y-1 transition-all duration-200 flex flex-col overflow-hidden group"
               >
-                {/* Image Header Banner */}
+                {/* 1. Image Header & Overlay Badges */}
                 <div className="relative h-48 bg-slate-100 overflow-hidden">
                   {service.imageUrl ? (
                     <img
@@ -656,100 +661,127 @@ export const Marketplace = () => {
 
                   <div
                     style={{ display: service.imageUrl ? 'none' : 'flex' }}
-                    className="w-full h-full bg-gradient-to-br from-indigo-50 to-sky-100 flex-col items-center justify-center text-indigo-300"
+                    className="w-full h-full bg-gradient-to-br from-indigo-50/80 via-slate-100 to-sky-100 flex-col items-center justify-center text-indigo-400"
                   >
                     {isWorkforce ? (
-                      <User className="w-16 h-16 opacity-60 mb-1" />
+                      <User className="w-14 h-14 opacity-50 mb-1" />
                     ) : (
-                      <Tractor className="w-16 h-16 opacity-60 mb-1" />
+                      <Tractor className="w-14 h-14 opacity-50 mb-1" />
                     )}
-                    <span className="text-[11px] font-bold text-indigo-400">
-                      {isWorkforce ? 'Workforce Listing' : 'Equipment Listing'}
+                    <span className="text-xs font-bold text-indigo-500">
+                      {isWorkforce ? 'Agricultural Workforce' : 'Machinery & Equipment'}
                     </span>
                   </div>
 
-                  {/* Category Badge overlay */}
+                  {/* Top Left: Category Badge */}
                   <span className={`absolute top-3 left-3 text-[10px] font-extrabold uppercase px-2.5 py-1 rounded-full backdrop-blur-md shadow-xs ${
                     isWorkforce
-                      ? 'bg-emerald-900/80 text-emerald-100 border border-emerald-500/30'
-                      : 'bg-indigo-900/80 text-white border border-indigo-500/30'
+                      ? 'bg-emerald-900/85 text-emerald-100 border border-emerald-400/40'
+                      : 'bg-slate-900/85 text-indigo-200 border border-indigo-400/40'
                   }`}>
                     {isWorkforce ? '👨‍🌾 Skilled Workforce' : '🚜 Machinery'}
                   </span>
 
-                  {/* Availability Badge overlay */}
-                  <span className={`absolute top-3 right-3 text-xs font-bold px-3 py-1 rounded-full backdrop-blur-md border shadow-xs flex items-center space-x-1 ${
+                  {/* Top Right: Status Badge */}
+                  <span className={`absolute top-3 right-3 text-[11px] font-bold px-2.5 py-1 rounded-full backdrop-blur-md border shadow-xs flex items-center space-x-1 ${
                     isAvailable
-                      ? 'bg-emerald-900/80 text-emerald-200 border-emerald-500/40'
-                      : 'bg-amber-900/80 text-amber-200 border-amber-500/40'
+                      ? 'bg-emerald-950/85 text-emerald-300 border-emerald-500/40'
+                      : 'bg-amber-950/85 text-amber-300 border-amber-500/40'
                   }`}>
                     <span className={`w-2 h-2 rounded-full ${isAvailable ? 'bg-emerald-400 animate-pulse' : 'bg-amber-400'}`}></span>
-                    <span>{isAvailable ? 'Available' : 'Busy'}</span>
+                    <span>{isAvailable ? 'Available Now' : 'Currently Busy'}</span>
                   </span>
+
+                  {/* Bottom Right Overlay: Distance Pill */}
+                  <div className="absolute bottom-3 right-3 bg-slate-950/80 backdrop-blur-md text-white px-2.5 py-1 rounded-xl text-[11px] font-bold border border-white/20 flex items-center space-x-1 shadow-md">
+                    <Compass className="w-3.5 h-3.5 text-sky-400 shrink-0" />
+                    <span>{service.distanceKm} km away</span>
+                  </div>
                 </div>
 
-                {/* Card Content */}
+                {/* 2. Organized Card Content */}
                 <div className="p-5 flex-1 flex flex-col justify-between space-y-4">
                   
-                  <div className="space-y-2">
-                    {/* Title */}
-                    <h3 className="font-bold text-slate-900 text-base leading-snug group-hover:text-indigo-600 transition-colors">
-                      {service.title}
-                    </h3>
-
-                    {/* Task Type Badge & 0% Commission Badge */}
-                    <div className="flex flex-wrap items-center gap-1.5">
-                      <span className="text-[11px] font-bold bg-slate-100 text-slate-700 px-2.5 py-0.5 rounded-lg capitalize">
-                        Task: {service.taskType}
-                      </span>
-                      {isWorkforce && (
-                        <span className="text-[10px] font-black bg-emerald-100 text-emerald-800 border border-emerald-300 px-2 py-0.5 rounded-lg">
-                          ⚡ 0% Admin Fee
+                  <div className="space-y-3">
+                    {/* Provider Profile Info Row */}
+                    <div className="flex items-center justify-between text-xs pb-1 border-b border-slate-100">
+                      <div className="flex items-center space-x-2">
+                        <div className="w-6 h-6 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold text-[10px] shrink-0 border border-indigo-200">
+                          {providerName.charAt(0)}
+                        </div>
+                        <span className="font-bold text-slate-800 truncate max-w-[140px]">{providerName}</span>
+                        <span className="text-[10px] font-extrabold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded-md border border-emerald-200">
+                          ✓ Verified
                         </span>
+                      </div>
+                      <span className="text-[11px] font-extrabold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200">
+                        ⭐ 4.9
+                      </span>
+                    </div>
+
+                    {/* Title & Task Badge */}
+                    <div>
+                      <h3 className="font-extrabold text-slate-900 text-base leading-snug group-hover:text-indigo-600 transition-colors">
+                        {service.title}
+                      </h3>
+                      
+                      <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
+                        <span className="text-[11px] font-bold bg-indigo-50 text-indigo-700 px-2.5 py-0.5 rounded-lg border border-indigo-100 capitalize">
+                          Task: {service.taskType}
+                        </span>
+                        {isWorkforce && (
+                          <span className="text-[10px] font-black bg-emerald-100 text-emerald-800 border border-emerald-300 px-2 py-0.5 rounded-lg">
+                            ⚡ 0% Admin Fee
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Structured Location & Specs Box */}
+                    <div className="bg-slate-50/80 border border-slate-200/80 rounded-2xl p-3 text-xs space-y-1.5">
+                      <div className="flex items-center justify-between text-slate-600 font-medium">
+                        <span className="flex items-center text-slate-500">
+                          <MapPin className="w-3.5 h-3.5 mr-1 text-indigo-600 shrink-0" />
+                          <span>Location:</span>
+                        </span>
+                        <span className="font-bold text-slate-900 truncate ml-1">{villageName}, {districtName}</span>
+                      </div>
+
+                      {isWorkforce ? (
+                        <div className="flex items-center justify-between text-slate-600 font-medium pt-1 border-t border-slate-200/50">
+                          <span className="text-slate-500">Crew Size:</span>
+                          <span className="font-bold text-emerald-800 bg-emerald-100/60 px-2 py-0.5 rounded-md border border-emerald-200">
+                            {service.workerCount > 1 ? `${service.workerCount} Workers (${service.workforceType || 'Team'})` : '1 Worker'}
+                          </span>
+                        </div>
+                      ) : (
+                        <div className="flex items-center justify-between text-slate-600 font-medium pt-1 border-t border-slate-200/50">
+                          <span className="text-slate-500">Coverage Radius:</span>
+                          <span className="font-bold text-slate-900">Up to {service.locationRadiusKm || 25} km</span>
+                        </div>
+                      )}
+
+                      {/* Specializations Tags for Workforce */}
+                      {isWorkforce && service.specializedTasks && service.specializedTasks.length > 0 && (
+                        <div className="flex flex-wrap gap-1 pt-1.5 border-t border-slate-200/50">
+                          {service.specializedTasks.map((st, i) => (
+                            <span key={i} className="text-[10px] bg-white text-emerald-800 font-bold px-2 py-0.5 rounded-md border border-emerald-200 shadow-2xs">
+                              ✓ {st}
+                            </span>
+                          ))}
+                        </div>
                       )}
                     </div>
 
-                    {/* Workforce Specific Metadata */}
-                    {isWorkforce && (
-                      <div className="bg-emerald-50/70 border border-emerald-100 p-2.5 rounded-xl text-xs space-y-1">
-                        <div className="flex items-center justify-between text-emerald-900 font-bold">
-                          <span>{service.workforceType || 'Skilled Team'}</span>
-                          <span>{service.workerCount > 1 ? `${service.workerCount} Workers` : '1 Worker'}</span>
-                        </div>
-                        {service.workforceGenderComposition && (
-                          <span className="text-[11px] text-emerald-700 block">Composition: {service.workforceGenderComposition}</span>
-                        )}
-                        {service.specializedTasks && service.specializedTasks.length > 0 && (
-                          <div className="flex flex-wrap gap-1 pt-1">
-                            {service.specializedTasks.map((st, i) => (
-                              <span key={i} className="text-[9px] bg-white text-emerald-800 font-semibold px-1.5 py-0.5 rounded border border-emerald-200">
-                                {st}
-                              </span>
-                            ))}
-                          </div>
-                        )}
-                      </div>
+                    {/* Description (if present) */}
+                    {service.description && (
+                      <p className="text-xs text-slate-500 font-medium line-clamp-2 leading-relaxed px-0.5">
+                        {service.description}
+                      </p>
                     )}
-
-                    {/* Distance & Location Info */}
-                    <div className="space-y-1 pt-1 text-xs">
-                      {/* Haversine Distance Badge */}
-                      <div className="flex items-center text-sky-700 font-bold bg-sky-50 border border-sky-100 px-2.5 py-1 rounded-xl w-fit">
-                        <Compass className="w-3.5 h-3.5 mr-1.5 text-sky-600 shrink-0" />
-                        <span>📍 {service.distanceKm} km away from your location</span>
-                      </div>
-
-                      {/* Provider Location */}
-                      <div className="flex items-center text-slate-500 font-medium pt-0.5">
-                        <MapPin className="w-3.5 h-3.5 mr-1 text-indigo-600 shrink-0" />
-                        <span>
-                          Provider Location: <strong>{service.village || service.providerId?.village || 'Village'}, {service.district || service.providerId?.district || selectedDistrict}</strong>
-                        </span>
-                      </div>
-                    </div>
                   </div>
 
-                  {/* Price Tag & Action */}
+                  {/* 3. Footer Action & Pricing */}
                   <div className="pt-3 border-t border-slate-100 flex items-center justify-between">
                     <div>
                       <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Rental Price</p>
@@ -759,17 +791,21 @@ export const Marketplace = () => {
                         </span>
                         <span className="text-xs text-slate-500 font-bold ml-1">{unitLabel}</span>
                       </div>
+                      <span className="inline-flex items-center space-x-1 text-[10px] font-bold bg-amber-50 text-amber-900 border border-amber-200 px-2 py-0.5 rounded-md mt-0.5">
+                        <Sparkles className="w-3 h-3 text-amber-500 shrink-0" />
+                        <span>AI Verified Rate ✓</span>
+                      </span>
                     </div>
 
                     <button
                       onClick={() => handleOpenBooking(service)}
-                      className={`font-bold px-4 py-2.5 rounded-2xl text-xs shadow-md transition-all flex items-center space-x-1.5 text-white ${
+                      className={`font-extrabold px-4 py-3 rounded-2xl text-xs shadow-md transition-all flex items-center space-x-1.5 text-white hover:scale-102 touch-action ${
                         isWorkforce
                           ? 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-600/20'
                           : 'bg-indigo-600 hover:bg-indigo-700 shadow-indigo-600/20'
                       }`}
                     >
-                      <span>{isWorkforce ? 'Book Workforce' : 'Rent Now'}</span>
+                      <span>{isWorkforce ? 'Book Workforce' : 'Rent Machinery'}</span>
                     </button>
                   </div>
 

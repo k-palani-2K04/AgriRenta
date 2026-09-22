@@ -4,6 +4,8 @@ import Service from '../models/Service.js';
 import User from '../models/User.js';
 import { protect } from '../middleware/authMiddleware.js';
 import { calculateHaversineDistance, getCoordinatesForDistrict } from '../utils/haversine.js';
+import { notifyBookingParties } from '../utils/notify.js';
+import { uploadJobPhoto } from '../middleware/uploadMiddleware.js';
 
 const router = express.Router();
 
@@ -44,7 +46,7 @@ const handleCreateBooking = async (req, res) => {
     }
 
     const acres = Number(landAreaAcres) || (service.pricingUnit === 'per_acre' ? Number(quantity) || 1 : 0);
-    const hours = Number(durationHours) || (service.pricingUnit === 'per_hour' ? Number(quantity) || 1 : 0);
+    const hours = Number(durationHours) || Number(req.body.hoursNeeded) || (service.pricingUnit === 'per_hour' ? Number(quantity) || 1 : 0);
     const qty = Number(quantity) || (acres > 0 ? acres : hours > 0 ? hours : 1);
 
     // Calculate total amount in rupees
@@ -61,8 +63,10 @@ const handleCreateBooking = async (req, res) => {
     const adminComm = isWorkforce ? 0 : Math.round(calculatedTotal * 0.05);
     const providerPayout = isWorkforce ? advancePaid : Math.round(calculatedTotal * 0.15);
 
-    // Set payment status based on verification or payment method (downstream actions blocked until confirmed)
     let finalPaymentStatus = clientPaymentStatus;
+    if (finalPaymentStatus === 'advance_paid') {
+      finalPaymentStatus = 'confirmed';
+    }
     if (!finalPaymentStatus) {
       if (paymentMethod === 'cod') {
         finalPaymentStatus = 'pending';
@@ -126,6 +130,19 @@ const handleCreateBooking = async (req, res) => {
     await Service.findByIdAndUpdate(service._id, { status: 'busy' });
 
     const gmapUrl = `https://www.google.com/maps/dir/?api=1&origin=${providerCoords.latitude},${providerCoords.longitude}&destination=${farmerLat},${farmerLng}&travelmode=driving`;
+
+    if (finalPaymentStatus === 'confirmed' || finalPaymentStatus === 'advance_paid') {
+      await notifyBookingParties(booking, {
+        type: 'payment_confirmed',
+        title: 'Payment Received — Advance Escrow Secured',
+        body: `₹${advancePaid} 20% advance verified and held in admin escrow.`,
+        payload: {
+          paymentStatus: 'confirmed',
+          escrowStatus: 'held_by_admin',
+          advancePaidInRupees: advancePaid
+        }
+      });
+    }
 
     return res.status(201).json({
       success: true,
@@ -283,6 +300,36 @@ router.put('/:id/status', async (req, res) => {
 
     await booking.save();
 
+    if (status === 'rejected' || status === 'cancelled') {
+      await notifyBookingParties(booking, {
+        type: 'refunded',
+        title: '100% Advance Refund Processed',
+        body: `Provider declined the request. ₹${booking.refundAmountInRupees} refunded. escrowStatus: refunded.`,
+        payload: { escrowStatus: 'refunded', paymentStatus: booking.paymentStatus }
+      });
+    } else if (status === 'confirmed') {
+      await notifyBookingParties(booking, {
+        type: 'provider_accepted',
+        title: 'Provider Accepted Your Booking',
+        body: 'The provider accepted this job and will coordinate field dispatch.',
+        payload: { status: 'confirmed' }
+      });
+    } else if (status === 'en_route') {
+      await notifyBookingParties(booking, {
+        type: 'en_route',
+        title: 'Provider En Route to Field',
+        body: 'Live GPS tracking is now available. Machinery or crew is on the way.',
+        payload: { status: 'en_route' }
+      });
+    } else if (status === 'arrived') {
+      await notifyBookingParties(booking, {
+        type: 'arrived',
+        title: 'Crew Arrived at Field',
+        body: 'The provider has arrived at the farm plot.',
+        payload: { status: 'arrived' }
+      });
+    }
+
     const pLat = booking.providerLocation?.latitude || 16.3400;
     const pLng = booking.providerLocation?.longitude || 80.4600;
     const fLat = booking.farmerLocation?.latitude || 16.3067;
@@ -329,10 +376,16 @@ router.put('/:id/confirm-job', async (req, res) => {
 
     await booking.save();
 
-    // Reset booked service status back to 'available' in MongoDB
     if (booking.serviceId) {
       await Service.findByIdAndUpdate(booking.serviceId, { status: 'available' });
     }
+
+    await notifyBookingParties(booking, {
+      type: 'job_completed',
+      title: 'Job Marked Completed',
+      body: 'The seeker confirmed field work. Admin can now disburse the provider payout.',
+      payload: { status: 'completed', paymentStatus: 'completed' }
+    });
 
     return res.json({
       success: true,
@@ -346,6 +399,90 @@ router.put('/:id/confirm-job', async (req, res) => {
       success: false,
       message: 'Server error confirming job completion'
     });
+  }
+});
+
+router.post('/:id/photos', uploadJobPhoto.single('photo'), async (req, res) => {
+  try {
+    const booking = await Booking.findById(req.params.id);
+    if (!booking) {
+      return res.status(404).json({ success: false, message: 'Booking not found' });
+    }
+
+    const isParty =
+      booking.farmerId.toString() === req.user._id.toString() ||
+      booking.providerId.toString() === req.user._id.toString() ||
+      req.user.role === 'admin';
+    if (!isParty) {
+      return res.status(403).json({ success: false, message: 'Not authorized to upload photos' });
+    }
+
+    if (!req.file) {
+      return res.status(400).json({ success: false, message: 'Please attach a field photo' });
+    }
+
+    const stage = req.body.stage === 'post' ? 'postService' : 'preService';
+    const photoEntry = {
+      url: `/uploads/jobs/${req.file.filename}`,
+      uploadedBy: req.user._id,
+      role: req.user.role,
+      uploadedAt: new Date()
+    };
+
+    booking.jobPhotos = booking.jobPhotos || { preService: [], postService: [] };
+    booking.jobPhotos[stage] = booking.jobPhotos[stage] || [];
+    booking.jobPhotos[stage].push(photoEntry);
+    await booking.save();
+
+    return res.json({
+      success: true,
+      message: `${stage === 'postService' ? 'Post-service' : 'Pre-service'} photo saved`,
+      booking
+    });
+  } catch (error) {
+    console.error('[BookingRoutes] Photo upload error:', error);
+    return res.status(500).json({ success: false, message: error.message || 'Failed to upload photo' });
+  }
+});
+
+router.post('/:id/attendance', async (req, res) => {
+  try {
+    const booking = await Booking.findById(req.params.id).populate('serviceId');
+    if (!booking) {
+      return res.status(404).json({ success: false, message: 'Booking not found' });
+    }
+
+    const isParty =
+      booking.farmerId.toString() === req.user._id.toString() ||
+      booking.providerId.toString() === req.user._id.toString() ||
+      req.user.role === 'admin';
+    if (!isParty) {
+      return res.status(403).json({ success: false, message: 'Not authorized to log attendance' });
+    }
+
+    const { date, workersPresent, tasksCompleted, notes } = req.body;
+    const crewCap = booking.serviceId?.workerCount || 1;
+    const present = Math.max(0, Number(workersPresent) || 0);
+
+    booking.attendanceLogs = booking.attendanceLogs || [];
+    booking.attendanceLogs.push({
+      date: date ? new Date(date) : new Date(),
+      workersPresent: present,
+      tasksCompleted: Array.isArray(tasksCompleted) ? tasksCompleted : (tasksCompleted ? [tasksCompleted] : []),
+      notes: notes || '',
+      loggedBy: req.user._id,
+      createdAt: new Date()
+    });
+    await booking.save();
+
+    return res.json({
+      success: true,
+      message: `Attendance saved (${present}/${crewCap} present)`,
+      booking
+    });
+  } catch (error) {
+    console.error('[BookingRoutes] Attendance error:', error);
+    return res.status(500).json({ success: false, message: error.message || 'Failed to save attendance' });
   }
 });
 

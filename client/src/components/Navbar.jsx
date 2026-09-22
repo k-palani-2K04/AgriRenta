@@ -13,8 +13,13 @@ import {
   UserPlus, 
   Menu,
   Bell,
-  Navigation
+  ClipboardList,
+  Navigation,
+  Sun,
+  Moon,
+  ShieldCheck
 } from 'lucide-react';
+import { useNotifications } from '../context/NotificationContext';
 
 export const Navbar = ({ onToggleSidebar }) => {
   const { 
@@ -29,23 +34,35 @@ export const Navbar = ({ onToggleSidebar }) => {
   } = useAuth();
   const navigate = useNavigate();
   const [pendingRequestsCount, setPendingRequestsCount] = useState(0);
+  const { unreadCount, enablePush, pushEnabled, markAllRead } = useNotifications();
+  const [sunlight, setSunlight] = useState(() => {
+    if (typeof document === 'undefined') return false;
+    return document.documentElement.classList.contains('sunlight-mode')
+      || localStorage.getItem('agrirenta_sunlight') === '1';
+  });
 
-  // Fetch pending requests badge count for provider with automated 3-second live polling
+  useEffect(() => {
+    document.documentElement.classList.toggle('sunlight-mode', sunlight);
+    localStorage.setItem('agrirenta_sunlight', sunlight ? '1' : '0');
+  }, [sunlight]);
+
+  // Fetch pending requests badge count for provider with automated background polling
   useEffect(() => {
     if (user && user.role === 'provider') {
       const fetchPendingCount = async () => {
+        if (typeof document !== 'undefined' && document.hidden) return;
         try {
           const res = await axios.get('/api/bookings/provider-requests');
           if (res.data.success) {
             setPendingRequestsCount(res.data.pendingCount || 0);
           }
-        } catch (err) {
-          console.error('Error fetching pending requests count:', err);
+        } catch {
+          // Silent catch when backend is restarting or offline
         }
       };
 
       fetchPendingCount();
-      const interval = setInterval(fetchPendingCount, 3000);
+      const interval = setInterval(fetchPendingCount, 8000);
       return () => clearInterval(interval);
     }
   }, [user]);
@@ -136,14 +153,51 @@ export const Navbar = ({ onToggleSidebar }) => {
           <div className="flex items-center space-x-3">
             {user ? (
               <div className="flex items-center space-x-3">
+                <button
+                  type="button"
+                  onClick={() => setSunlight((v) => !v)}
+                  className="touch-action min-w-12 px-2 rounded-xl text-slate-700 hover:bg-amber-50 border border-transparent hover:border-amber-200"
+                  title="Sunlight high-contrast field view"
+                >
+                  {sunlight ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5 text-amber-500" />}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (!pushEnabled) enablePush();
+                    markAllRead();
+                  }}
+                  className="relative touch-action min-w-12 p-2 text-slate-600 hover:text-indigo-600 hover:bg-slate-100 rounded-xl"
+                  title="Alerts"
+                >
+                  <Bell className="w-5 h-5" />
+                  {unreadCount > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-emerald-600 text-white text-[10px] font-black w-5 h-5 rounded-full flex items-center justify-center border-2 border-white">
+                      {unreadCount}
+                    </span>
+                  )}
+                </button>
+
                 {/* Provider Live Request Notification Badge */}
+                {user.role === 'admin' && (
+                  <Link
+                    to="/admin/dashboard"
+                    className="bg-slate-900 hover:bg-slate-800 text-amber-400 font-extrabold px-3 py-1.5 rounded-xl text-xs flex items-center space-x-1 shadow-xs border border-amber-400/30"
+                    title="Access Admin Escrow Hub"
+                  >
+                    <ShieldCheck className="w-4 h-4 text-emerald-400" />
+                    <span>Admin Escrow Hub</span>
+                  </Link>
+                )}
+
                 {user.role === 'provider' && (
                   <Link
                     to="/provider/requests"
                     className="relative p-2 text-slate-600 hover:text-indigo-600 hover:bg-slate-100 rounded-xl transition-colors"
                     title="Rental Requests"
                   >
-                    <Bell className="w-5 h-5" />
+                    <ClipboardList className="w-5 h-5" />
                     {pendingRequestsCount > 0 && (
                       <span className="absolute -top-1 -right-1 bg-amber-500 text-white text-[10px] font-black w-5 h-5 rounded-full flex items-center justify-center border-2 border-white shadow-xs animate-bounce">
                         {pendingRequestsCount}
@@ -161,7 +215,7 @@ export const Navbar = ({ onToggleSidebar }) => {
 
                 <button
                   onClick={handleLogout}
-                  className="flex items-center space-x-1 bg-slate-100 hover:bg-rose-50 text-slate-700 hover:text-rose-700 border border-slate-200 hover:border-rose-200 px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors"
+                  className="touch-action flex items-center space-x-1 bg-slate-100 hover:bg-rose-50 text-slate-700 hover:text-rose-700 border border-slate-200 hover:border-rose-200 px-3 rounded-xl text-xs font-semibold"
                   title="Logout"
                 >
                   <LogOut className="w-4 h-4" />

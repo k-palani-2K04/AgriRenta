@@ -5,3 +5,29 @@
     @apply bg-slate-50 text-slate-900;
   }
 }
+
+@layer components {
+  .touch-action {
+    min-height: 48px;
+    @apply active:scale-95 transition-transform;
+  }
+}
+
+html.sunlight-mode {
+  filter: contrast(1.28) saturate(1.2);
+}
+
+html.sunlight-mode body {
+  background: #fffbeb !important;
+  color: #111827 !important;
+}
+
+html.sunlight-mode .bg-white {
+  background-color: #ffffff !important;
+  border-color: #111827 !important;
+}
+
+html.sunlight-mode button,
+html.sunlight-mode a {
+  font-weight: 800;
+}

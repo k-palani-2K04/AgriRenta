@@ -19,41 +19,81 @@ router.get('/route', async (req, res) => {
   const eLat = Number(endLat) || 16.3067;
   const eLng = Number(endLng) || 80.4365;
 
+  // 1. Optional Google Maps Directions API proxy (if API key configured)
+  if (process.env.GOOGLE_MAPS_API_KEY) {
+    try {
+      const gmapsUrl = `https://maps.googleapis.com/maps/api/directions/json?origin=${sLat},${sLng}&destination=${eLat},${eLng}&mode=driving&key=${process.env.GOOGLE_MAPS_API_KEY}`;
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 6000);
+      const gRes = await fetch(gmapsUrl, { signal: controller.signal });
+      clearTimeout(timeoutId);
+
+      if (gRes.ok) {
+        const gData = await gRes.json();
+        if (gData.status === 'OK' && gData.routes?.[0]) {
+          const gRoute = gData.routes[0];
+          const leg = gRoute.legs[0];
+          const steps = (leg.steps || []).map(s => ({
+            instruction: s.html_instructions ? s.html_instructions.replace(/<[^>]*>?/gm, '') : 'Continue on route',
+            distanceMeters: s.distance?.value || 0,
+            name: s.maneuver || 'Road'
+          }));
+
+          return res.json({
+            success: true,
+            source: 'GOOGLE_MAPS_DIRECTIONS_API',
+            distanceKm: Number(((leg.distance?.value || 0) / 1000).toFixed(1)),
+            durationMins: Math.max(1, Math.round((leg.duration?.value || 0) / 60)),
+            steps
+          });
+        }
+      }
+    } catch (gErr) {
+      console.warn('[TrackingRoutes] Google Directions API warning:', gErr.message);
+    }
+  }
+
+  // 2. Primary Free OSRM Road Network Engine
   try {
-    // Call OSRM server-side via Node axios (eliminates browser CORS restrictions!)
     const osrmUrl = `http://router.project-osrm.org/route/v1/driving/${sLng},${sLat};${eLng},${eLat}?overview=full&geometries=geojson&steps=true`;
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 7000);
     
-    const response = await axios.get(osrmUrl, { timeout: 7000 });
+    const response = await fetch(osrmUrl, { signal: controller.signal });
+    clearTimeout(timeoutId);
 
-    if (response.data?.routes?.[0]?.geometry?.coordinates) {
-      const route = response.data.routes[0];
-      const osrmCoords = route.geometry.coordinates; // [[lng, lat], ...]
-      const polyline = osrmCoords.map(([lng, lat]) => [lat, lng]);
+    if (response.ok) {
+      const data = await response.json();
+      if (data?.routes?.[0]?.geometry?.coordinates) {
+        const route = data.routes[0];
+        const osrmCoords = route.geometry.coordinates; // [[lng, lat], ...]
+        const polyline = osrmCoords.map(([lng, lat]) => [lat, lng]);
 
-      // Extract turn-by-turn step instructions
-      const steps = [];
-      if (route.legs?.[0]?.steps) {
-        route.legs[0].steps.forEach((step) => {
-          if (step.maneuver) {
-            steps.push({
-              instruction: step.maneuver.modifier 
-                ? `${step.maneuver.type} ${step.maneuver.modifier} onto ${step.name || 'road'}`
-                : `${step.maneuver.type} onto ${step.name || 'main road'}`,
-              distanceMeters: Math.round(step.distance),
-              name: step.name || 'Road'
-            });
-          }
+        // Extract turn-by-turn step instructions
+        const steps = [];
+        if (route.legs?.[0]?.steps) {
+          route.legs[0].steps.forEach((step) => {
+            if (step.maneuver) {
+              steps.push({
+                instruction: step.maneuver.modifier 
+                  ? `${step.maneuver.type} ${step.maneuver.modifier} onto ${step.name || 'road'}`
+                  : `${step.maneuver.type} onto ${step.name || 'main road'}`,
+                distanceMeters: Math.round(step.distance),
+                name: step.name || 'Road'
+              });
+            }
+          });
+        }
+
+        return res.json({
+          success: true,
+          source: 'OSRM_REAL_ROAD_ENGINE',
+          distanceKm: Number((route.distance / 1000).toFixed(1)),
+          durationMins: Math.max(1, Math.round(route.duration / 60)),
+          polyline,
+          steps
         });
       }
-
-      return res.json({
-        success: true,
-        source: 'OSRM_REAL_ROAD_ENGINE',
-        distanceKm: Number((route.distance / 1000).toFixed(1)),
-        durationMins: Math.max(1, Math.round(route.duration / 60)),
-        polyline,
-        steps
-      });
     }
   } catch (err) {
     console.warn('[TrackingRoutes] OSRM proxy failed, using road-snapped network:', err.message);

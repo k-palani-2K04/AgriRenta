@@ -3,6 +3,8 @@ import Booking from '../models/Booking.js';
 import Service from '../models/Service.js';
 import User from '../models/User.js';
 import { protect } from '../middleware/authMiddleware.js';
+import { instantUpiPayout } from '../utils/payoutEngine.js';
+import { createNotification, notifyBookingParties } from '../utils/notify.js';
 
 const router = express.Router();
 
@@ -30,7 +32,7 @@ router.get('/stats', async (req, res) => {
       const comm = b.adminCommissionInRupees || Math.round(tot * 0.05);
       const provDisb = b.providerPayoutAmountInRupees || Math.round(tot * 0.15);
 
-      if (b.paymentStatus === 'advance_paid' || b.paymentStatus === 'completed') {
+      if (b.paymentStatus === 'advance_paid' || b.paymentStatus === 'confirmed' || b.paymentStatus === 'completed') {
         totalEscrowCollected += adv;
         totalAdminCommission += comm;
         totalProviderDisbursement += provDisb;
@@ -110,15 +112,24 @@ router.put('/bookings/:id/release-payout', async (req, res) => {
     booking.escrowStatus = 'released_to_provider';
     booking.payoutReleaseDate = new Date();
     booking.payoutTransactionId = payoutTransactionId || `PAYOUT_UPI_${Date.now()}`;
-    booking.providerPayoutAmount = booking.advancePaidInRupees || Math.round((booking.totalAmountInRupees || 0) * 0.20);
+    booking.providerPayoutAmount = booking.providerPayoutAmountInRupees || booking.advancePaidInRupees || Math.round((booking.totalAmountInRupees || 0) * 0.20);
     booking.status = 'completed';
 
     await booking.save();
 
-    // Mark the service as available again for future bookings
     if (booking.serviceId) {
       await Service.findByIdAndUpdate(booking.serviceId, { status: 'available' });
     }
+
+    const payoutAmt = booking.providerPayoutAmountInRupees || booking.providerPayoutAmount;
+    await createNotification({
+      userId: booking.providerId,
+      type: 'payout_disbursed',
+      title: 'Payout Disbursed to Provider UPI',
+      body: `₹${payoutAmt} released. Ref: ${booking.payoutTransactionId}`,
+      bookingId: booking._id,
+      payload: { escrowStatus: 'released_to_provider', payoutTransactionId: booking.payoutTransactionId }
+    });
 
     return res.json({
       success: true,
@@ -131,6 +142,72 @@ router.put('/bookings/:id/release-payout', async (req, res) => {
     return res.status(500).json({
       success: false,
       message: error.message || 'Server error releasing payout'
+    });
+  }
+});
+
+router.put('/bookings/:id/instant-payout', async (req, res) => {
+  try {
+    const booking = await Booking.findById(req.params.id).populate('providerId', 'name phone upiId');
+
+    if (!booking) {
+      return res.status(404).json({
+        success: false,
+        message: 'Booking not found'
+      });
+    }
+
+    const amount = booking.providerPayoutAmountInRupees || booking.providerPayoutAmount || Math.round((booking.totalAmountInRupees || 0) * 0.15);
+    const providerVpa = booking.providerId?.upiId || req.body.vpa || '9030585591@ybl';
+    const providerName = booking.providerId?.name || 'AgriRenta Provider';
+
+    const payout = await instantUpiPayout({
+      amount,
+      vpa: providerVpa,
+      name: providerName,
+      bookingId: booking._id
+    });
+
+    if (!payout.success) {
+      return res.status(502).json({ success: false, message: 'Payout gateway declined the transfer' });
+    }
+
+    booking.escrowStatus = 'released_to_provider';
+    booking.payoutReleaseDate = new Date();
+    booking.payoutTransactionId = payout.transactionId;
+    booking.payoutChannel = payout.channel;
+    booking.payoutVpa = payout.vpa;
+    booking.providerPayoutAmount = amount;
+    booking.status = 'completed';
+    await booking.save();
+
+    if (booking.serviceId) {
+      await Service.findByIdAndUpdate(booking.serviceId, { status: 'available' });
+    }
+
+    await notifyBookingParties(booking, {
+      type: 'payout_disbursed',
+      title: 'Payout Disbursed to Provider UPI',
+      body: `₹${Number(amount).toFixed(2)} sent to ${payout.vpa} via ${payout.channel}.`,
+      payload: {
+        escrowStatus: 'released_to_provider',
+        payoutTransactionId: payout.transactionId,
+        payoutChannel: payout.channel,
+        payoutVpa: payout.vpa
+      }
+    });
+
+    return res.json({
+      success: true,
+      message: `Instant UPI payout of ₹${Number(amount).toFixed(2)} disbursed to ${payout.vpa}`,
+      payout,
+      booking
+    });
+  } catch (error) {
+    console.error('[AdminRoutes] Instant payout error:', error);
+    return res.status(500).json({
+      success: false,
+      message: error.message || 'Server error releasing instant payout'
     });
   }
 });

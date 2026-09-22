@@ -3,6 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import { APP_CONFIG, formatRupees } from '../config/appName';
+import { JobPhotosPanel } from '../components/JobPhotosPanel';
+import { AttendanceTracker } from '../components/AttendanceTracker';
+import { BookingListSkeleton } from '../components/SkeletonCards';
 import { 
   Tractor, 
   Calendar, 
@@ -149,10 +152,7 @@ export const ProviderRequestsPage = () => {
 
       {/* Requests List */}
       {loading ? (
-        <div className="py-16 text-center text-slate-500">
-          <div className="w-8 h-8 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
-          <p className="text-xs font-semibold">Loading rental requests...</p>
-        </div>
+        <BookingListSkeleton />
       ) : requests.length === 0 ? (
         <div className="bg-white rounded-3xl border border-slate-200/80 p-12 text-center space-y-3">
           <div className="bg-indigo-50 text-indigo-600 p-4 rounded-full w-fit mx-auto">
@@ -219,7 +219,9 @@ export const ProviderRequestsPage = () => {
                     <div className="flex items-center justify-between">
                       <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Financial Breakdown</p>
                       <span className="text-[10px] font-extrabold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-md">
-                        15% Net Payout
+                        {(service?.category === 'Agricultural Skilled Workforce' || service?.category === 'human_labor')
+                          ? '0% Admin Fee'
+                          : '15% Net Payout'}
                       </span>
                     </div>
 
@@ -245,13 +247,13 @@ export const ProviderRequestsPage = () => {
                     <>
                       <button
                         onClick={() => handleUpdateStatus(b._id, 'confirmed')}
-                        className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-4 py-2 rounded-xl text-xs shadow-xs"
+                        className="touch-action bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-4 rounded-xl text-xs shadow-xs"
                       >
                         Accept & Confirm Booking
                       </button>
                       <button
                         onClick={() => handleUpdateStatus(b._id, 'cancelled')}
-                        className="bg-slate-100 hover:bg-rose-50 text-rose-700 border border-slate-200 font-bold px-4 py-2 rounded-xl text-xs"
+                        className="touch-action bg-slate-100 hover:bg-rose-50 text-rose-700 border border-slate-200 font-bold px-4 rounded-xl text-xs"
                       >
                         Reject Request
                       </button>
@@ -263,7 +265,7 @@ export const ProviderRequestsPage = () => {
                       href={b.gmapUrl || `https://www.google.com/maps/dir/?api=1&origin=${b.providerLocation?.latitude || 16.3400},${b.providerLocation?.longitude || 80.4600}&destination=${b.farmerLocation?.latitude || 16.3067},${b.farmerLocation?.longitude || 80.4365}&travelmode=driving`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="bg-[#0F8A43] hover:bg-[#0c7337] text-white font-extrabold px-4 py-2 rounded-xl text-xs flex items-center space-x-1.5 shadow-md transition-transform hover:scale-102"
+                      className="touch-action bg-[#0F8A43] hover:bg-[#0c7337] text-white font-extrabold px-4 rounded-xl text-xs flex items-center justify-center space-x-1.5 shadow-md"
                     >
                       <Navigation className="w-3.5 h-3.5" />
                       <span>Navigate via Google Maps 🧭</span>
@@ -274,14 +276,14 @@ export const ProviderRequestsPage = () => {
                     <>
                       <button
                         onClick={() => handleUpdateStatus(b._id, 'en_route')}
-                        className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-4 py-2 rounded-xl text-xs shadow-xs flex items-center space-x-1"
+                        className="touch-action bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-4 rounded-xl text-xs shadow-xs flex items-center space-x-1"
                       >
                         <Tractor className="w-4 h-4" />
                         <span>Dispatch / Start Work</span>
                       </button>
                       <button
                         onClick={() => handleUpdateStatus(b._id, 'completed')}
-                        className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-4 py-2 rounded-xl text-xs shadow-xs flex items-center space-x-1"
+                        className="touch-action bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-4 rounded-xl text-xs shadow-xs flex items-center space-x-1"
                       >
                         <CheckCircle className="w-4 h-4" />
                         <span>Mark Job Completed</span>
@@ -293,14 +295,14 @@ export const ProviderRequestsPage = () => {
                     <>
                       <button
                         onClick={() => handleUpdateStatus(b._id, 'arrived')}
-                        className="bg-amber-600 hover:bg-amber-700 text-white font-bold px-4 py-2 rounded-xl text-xs shadow-xs flex items-center space-x-1"
+                        className="touch-action bg-amber-600 hover:bg-amber-700 text-white font-bold px-4 rounded-xl text-xs shadow-xs flex items-center space-x-1"
                       >
                         <MapPin className="w-4 h-4" />
                         <span>Mark Arrived at Client Field</span>
                       </button>
                       <button
                         onClick={() => handleUpdateStatus(b._id, 'completed')}
-                        className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-4 py-2 rounded-xl text-xs shadow-xs flex items-center space-x-1"
+                        className="touch-action bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-4 rounded-xl text-xs shadow-xs flex items-center space-x-1"
                       >
                         <CheckCircle className="w-4 h-4" />
                         <span>Mark Job Completed</span>
@@ -311,12 +313,27 @@ export const ProviderRequestsPage = () => {
                   {b.status === 'arrived' && (
                     <button
                       onClick={() => handleUpdateStatus(b._id, 'completed')}
-                      className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-4 py-2 rounded-xl text-xs shadow-xs flex items-center space-x-1"
+                      className="touch-action bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-4 rounded-xl text-xs shadow-xs flex items-center space-x-1"
                     >
                       <CheckCircle className="w-4 h-4" />
                       <span>Mark Job Completed</span>
                     </button>
                   )}
+                </div>
+
+                <div className="space-y-3">
+                  <JobPhotosPanel
+                    booking={b}
+                    onUpdated={(updated) => {
+                      setRequests((prev) => prev.map((x) => (x._id === updated._id ? { ...x, ...updated } : x)));
+                    }}
+                  />
+                  <AttendanceTracker
+                    booking={b}
+                    onUpdated={(updated) => {
+                      setRequests((prev) => prev.map((x) => (x._id === updated._id ? { ...x, ...updated } : x)));
+                    }}
+                  />
                 </div>
 
               </div>

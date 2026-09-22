@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import axios from 'axios';
@@ -17,11 +17,13 @@ import {
   Play, 
   Pause,
   Compass,
-  CornerUpRight
+  CornerUpRight,
+  AlertCircle,
+  Map as MapIcon
 } from 'lucide-react';
 import { formatRupees } from '../config/appName';
 
-// Zomato Style Leaflet Marker Icons
+// Leaflet Custom Icons
 const createZomatoProviderIcon = () => {
   return L.divIcon({
     className: 'zomato-provider-marker',
@@ -101,15 +103,15 @@ const createZomatoFarmerIcon = () => {
 const providerZomatoIcon = createZomatoProviderIcon();
 const farmerZomatoIcon = createZomatoFarmerIcon();
 
-// Recenter controller component with invalidateSize fix
+// Recenter & Resize controller component for Leaflet
 function MapController({ center, zoomTrigger, polylineCoords }) {
   const map = useMap();
 
   useEffect(() => {
-    // Invalidate map size so Leaflet renders canvas & polylines properly
+    // Invalidate map size so Leaflet renders canvas & polylines properly without blank tiles
     const timer = setTimeout(() => {
       map.invalidateSize();
-    }, 300);
+    }, 250);
     return () => clearTimeout(timer);
   }, [map]);
 
@@ -146,6 +148,7 @@ export const InteractiveGeoMap = ({
   const providerLng = provider?.location?.longitude || 80.4600;
 
   const farmerPos = [farmerLat, farmerLng];
+  const [initialProviderPos] = useState([providerLat, providerLng]);
   const [currentProviderPos, setCurrentProviderPos] = useState([providerLat, providerLng]);
 
   // Route & Navigation States
@@ -158,12 +161,13 @@ export const InteractiveGeoMap = ({
   const [isSimulating, setIsSimulating] = useState(false);
   const [isWatchActive, setIsWatchActive] = useState(false);
   const [recenterCount, setRecenterCount] = useState(0);
+  const [toastMessage, setToastMessage] = useState(null);
 
   const simulationTimerRef = useRef(null);
   const watchIdRef = useRef(null);
 
-  // Fetch Turn-by-Turn Road Geometry from Backend Proxy Route (OSRM Engine)
-  const fetchRoadRoute = async (startPos, endPos) => {
+  // Fetch Turn-by-Turn Road Geometry from Backend Proxy Route (OSRM Engine / Google Directions API)
+  const fetchRoadRoute = useCallback(async (startPos, endPos) => {
     try {
       setLoadingRoute(true);
       const url = `/api/tracking/route?startLat=${startPos[0]}&startLng=${startPos[1]}&endLat=${endPos[0]}&endLng=${endPos[1]}`;
@@ -177,22 +181,23 @@ export const InteractiveGeoMap = ({
         setCurrentStepIndex(0);
       }
     } catch (err) {
-      console.warn('Route API error, generating road path:', err.message);
+      console.warn('Route API error, generating road path fallback:', err.message);
     } finally {
       setLoadingRoute(false);
     }
-  };
+  }, []);
 
+  // Trigger initial route fetch ONLY on mount or when destination/origin changes, NOT on every simulation step!
   useEffect(() => {
-    fetchRoadRoute(currentProviderPos, farmerPos);
-  }, [currentProviderPos[0], currentProviderPos[1], farmerPos[0], farmerPos[1]]);
+    fetchRoadRoute(initialProviderPos, farmerPos);
+  }, [initialProviderPos[0], initialProviderPos[1], farmerPos[0], farmerPos[1], fetchRoadRoute]);
 
   // Continuous HTML5 Geolocation Watch Position
   const toggleLiveGpsWatch = () => {
     if (isWatchActive) {
       if (watchIdRef.current) navigator.geolocation.clearWatch(watchIdRef.current);
       setIsWatchActive(false);
-      alert('Continuous GPS Live Tracking paused.');
+      showToast('Continuous GPS Live Tracking paused.');
     } else {
       if (navigator.geolocation) {
         setIsWatchActive(true);
@@ -210,15 +215,20 @@ export const InteractiveGeoMap = ({
             }
           },
           (err) => {
-            alert('GPS permission denied or location unavailable.');
+            showToast('GPS permission denied or location unavailable.');
             setIsWatchActive(false);
           },
           { enableHighAccuracy: true, timeout: 10000, maximumAge: 1000 }
         );
       } else {
-        alert('Geolocation is not supported by your browser.');
+        showToast('Geolocation is not supported by your browser.');
       }
     }
+  };
+
+  const showToast = (msg) => {
+    setToastMessage(msg);
+    setTimeout(() => setToastMessage(null), 3500);
   };
 
   useEffect(() => {
@@ -266,7 +276,7 @@ export const InteractiveGeoMap = ({
       setIsSimulating(true);
       simulationTimerRef.current = setInterval(() => {
         handleStepNextPoint();
-      }, 600);
+      }, 500);
     }
   };
 
@@ -284,8 +294,16 @@ export const InteractiveGeoMap = ({
   const gmapUrl = `https://www.google.com/maps/dir/?api=1&origin=${currentProviderPos[0]},${currentProviderPos[1]}&destination=${farmerLat},${farmerLng}&travelmode=driving`;
 
   return (
-    <div className="rounded-3xl shadow-xl border border-slate-200 overflow-hidden bg-white space-y-0">
+    <div className="rounded-3xl shadow-xl border border-slate-200 overflow-hidden bg-white space-y-0 relative">
       
+      {/* Toast Notification Banner */}
+      {toastMessage && (
+        <div className="absolute top-16 left-1/2 -translate-x-1/2 z-[1000] bg-slate-900 text-white px-4 py-2 rounded-2xl text-xs font-bold shadow-2xl flex items-center space-x-2 border border-slate-700 animate-bounce">
+          <AlertCircle className="w-4 h-4 text-amber-400" />
+          <span>{toastMessage}</span>
+        </div>
+      )}
+
       {/* 1. ZOMATO GREEN TOP HEADER BANNER */}
       <div className="bg-[#0F8A43] text-white py-4 px-6 text-center shadow-md relative z-20">
         <h2 className="text-xl sm:text-2xl font-extrabold tracking-tight">
@@ -429,7 +447,7 @@ export const InteractiveGeoMap = ({
             polylineCoords={roadPolyline}
           />
 
-          {/* REAL OSRM STREET NETWORK POLYLINE WITH DUAL STROKE CONTRAST */}
+          {/* REAL STREET NETWORK POLYLINE WITH DUAL STROKE CONTRAST */}
           {roadPolyline.length > 0 && (
             <>
               {/* Contour Shadow Line */}

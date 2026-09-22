@@ -6,8 +6,9 @@ import fs from 'fs';
 const baseUploadDir = path.join(process.cwd(), 'uploads');
 const equipmentDir = path.join(baseUploadDir, 'equipment');
 const workersDir = path.join(baseUploadDir, 'workers');
+const jobsDir = path.join(baseUploadDir, 'jobs');
 
-[baseUploadDir, equipmentDir, workersDir].forEach((dir) => {
+[baseUploadDir, equipmentDir, workersDir, jobsDir].forEach((dir) => {
   if (!fs.existsSync(dir)) {
     fs.mkdirSync(dir, { recursive: true });
   }
@@ -51,5 +52,22 @@ const fileFilter = (req, file, cb) => {
 export const upload = multer({
   storage,
   limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+  fileFilter
+});
+
+const jobPhotoStorage = multer.diskStorage({
+  destination(_req, _file, cb) {
+    cb(null, jobsDir);
+  },
+  filename(_req, file, cb) {
+    const ext = path.extname(file.originalname);
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+    cb(null, `job-${uniqueSuffix}${ext}`);
+  }
+});
+
+export const uploadJobPhoto = multer({
+  storage: jobPhotoStorage,
+  limits: { fileSize: 5 * 1024 * 1024 },
   fileFilter
 });

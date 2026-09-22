@@ -3,6 +3,7 @@ import { Outlet, Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { APP_CONFIG } from '../config/appName';
 import { ShieldCheck, LogOut, Tractor, Wallet, ArrowLeft } from 'lucide-react';
+import { NotificationBanner } from './NotificationBanner';
 
 export const AdminLayout = () => {
   const { user, logout } = useAuth();
@@ -52,7 +53,7 @@ export const AdminLayout = () => {
 
               <button
                 onClick={handleLogout}
-                className="flex items-center space-x-1.5 bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 border border-rose-500/30 px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-colors"
+                className="flex items-center space-x-1.5 bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 border border-rose-500/30 px-3.5 min-h-12 rounded-xl text-xs font-semibold transition-colors active:scale-95"
                 title="Sign out of Admin Portal"
               >
                 <LogOut className="w-4 h-4" />
@@ -66,6 +67,7 @@ export const AdminLayout = () => {
 
       {/* Dynamic Admin Body Content */}
       <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto w-full">
+        <NotificationBanner />
         <Outlet />
       </main>
 

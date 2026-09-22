@@ -156,7 +156,7 @@ export const Login = () => {
                   <button
                     type="button"
                     onClick={() => handleFillDemo('9030585591', 'admin@123', 'admin')}
-                    className="text-[10px] bg-indigo-600 text-white px-2 py-0.5 rounded-md font-bold hover:bg-indigo-700"
+                    className="text-[10px] bg-indigo-600 text-white px-3 rounded-md font-bold hover:bg-indigo-700 touch-action"
                   >
                     Auto Fill Admin
                   </button>

@@ -3,6 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import { APP_CONFIG, formatRupees } from '../config/appName';
+import { BookingListSkeleton } from '../components/SkeletonCards';
+import { JobPhotosPanel } from '../components/JobPhotosPanel';
+import { AttendanceTracker } from '../components/AttendanceTracker';
+import { ConfettiBurst } from '../components/ConfettiBurst';
 import { 
   Tractor, 
   Calendar, 
@@ -26,6 +30,7 @@ export const MyBookingsPage = () => {
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('active'); // 'active' | 'history'
+  const [confetti, setConfetti] = useState(false);
   const navigate = useNavigate();
 
   const fetchMyBookings = async () => {
@@ -46,7 +51,7 @@ export const MyBookingsPage = () => {
     try {
       const res = await axios.put(`/api/bookings/${bookingId}/confirm-job`);
       if (res.data.success) {
-        alert('Job completion confirmed! Service status set to available and admin notified for provider payout.');
+        setConfetti(true);
         fetchMyBookings();
       }
     } catch (err) {
@@ -104,6 +109,7 @@ export const MyBookingsPage = () => {
 
   return (
     <div className="space-y-6">
+      <ConfettiBurst active={confetti} onDone={() => setConfetti(false)} />
       
       {/* Banner */}
       <div className="bg-gradient-to-br from-indigo-700 via-indigo-600 to-sky-700 rounded-3xl p-6 sm:p-8 text-white shadow-xl shadow-indigo-600/10 relative overflow-hidden">
@@ -160,10 +166,7 @@ export const MyBookingsPage = () => {
 
       {/* Bookings List */}
       {loading ? (
-        <div className="py-16 text-center text-slate-500">
-          <div className="w-8 h-8 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
-          <p className="text-xs font-semibold">Loading your bookings...</p>
-        </div>
+        <BookingListSkeleton />
       ) : currentDisplayList.length === 0 ? (
         <div className="bg-white rounded-3xl border border-slate-200/80 p-12 text-center space-y-3">
           <div className="bg-indigo-50 text-indigo-600 p-4 rounded-full w-fit mx-auto">
@@ -298,7 +301,7 @@ export const MyBookingsPage = () => {
                         href={b.gmapUrl || `https://www.google.com/maps/dir/?api=1&origin=${b.providerLocation?.latitude || 16.3400},${b.providerLocation?.longitude || 80.4600}&destination=${b.farmerLocation?.latitude || 16.3067},${b.farmerLocation?.longitude || 80.4365}&travelmode=driving`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="bg-[#0F8A43] hover:bg-[#0c7337] text-white font-extrabold py-2 px-3 rounded-xl text-xs flex items-center justify-center space-x-1 shadow-xs transition-transform hover:scale-102 w-full mt-2"
+                        className="touch-action bg-[#0F8A43] hover:bg-[#0c7337] text-white font-extrabold py-2 px-3 rounded-xl text-xs flex items-center justify-center space-x-1 shadow-xs w-full mt-2"
                       >
                         <Navigation className="w-3.5 h-3.5" />
                         <span>Navigate via Google Maps 🧭</span>
@@ -340,13 +343,27 @@ export const MyBookingsPage = () => {
                         </div>
                         <button
                           onClick={() => handleConfirmJobCompletion(b._id)}
-                          className="bg-amber-600 hover:bg-amber-700 text-white font-extrabold px-4 py-2 rounded-xl text-xs shadow-xs shrink-0 transition-transform hover:scale-102 flex items-center space-x-1"
+                          className="touch-action bg-amber-600 hover:bg-amber-700 text-white font-extrabold px-4 rounded-xl text-xs shadow-xs shrink-0 flex items-center justify-center space-x-1"
                         >
                           <CheckSquare className="w-4 h-4" />
                           <span>Mark as Completed ✓</span>
                         </button>
                       </div>
                     )}
+                    <div className="space-y-3 mt-3">
+                      <JobPhotosPanel
+                        booking={b}
+                        onUpdated={(updated) => {
+                          setBookings((prev) => prev.map((x) => (x._id === updated._id ? { ...x, ...updated } : x)));
+                        }}
+                      />
+                      <AttendanceTracker
+                        booking={b}
+                        onUpdated={(updated) => {
+                          setBookings((prev) => prev.map((x) => (x._id === updated._id ? { ...x, ...updated } : x)));
+                        }}
+                      />
+                    </div>
                   </div>
                 )}
 

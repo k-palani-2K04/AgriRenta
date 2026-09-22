@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { formatRupees } from '../config/appName';
+import { useNotifications } from '../context/NotificationContext';
 import { 
   Tractor, 
   User, 
@@ -23,7 +24,8 @@ export const BookingModal = ({
   user,
   onSuccess
 }) => {
-  const [bookingDate, setBookingDate] = useState(new Date().toISOString().split('T')[0]);
+  const { fetchNotifications } = useNotifications();
+  const [bookingDate, setBookingDate] = useState(() => new Date().toISOString().split('T')[0]);
   const [acresOrHours, setAcresOrHours] = useState(1);
   const [paymentMethod, setPaymentMethod] = useState('upi');
   const [bookingStep, setBookingStep] = useState('details'); // 'details' | 'payment'
@@ -177,15 +179,15 @@ export const BookingModal = ({
         <div className="overflow-y-auto flex-1">
           {bookingSuccess ? (
             <div className="p-6 text-center space-y-3">
-              <div className={`p-3.5 rounded-full w-fit mx-auto animate-bounce ${submittedPaymentStatus === 'advance_paid' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>
+              <div className={`p-3.5 rounded-full w-fit mx-auto animate-bounce ${submittedPaymentStatus === 'confirmed' || submittedPaymentStatus === 'advance_paid' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>
                 <CheckCircle className="w-9 h-9" />
               </div>
               <h3 className="font-bold text-slate-900 text-base">
-                {submittedPaymentStatus === 'advance_paid' ? '✓ 20% Advance Payment Verified!' : '📋 Booking Request Submitted!'}
+                {submittedPaymentStatus === 'confirmed' || submittedPaymentStatus === 'advance_paid' ? '✓ 20% Advance Payment Verified!' : '📋 Booking Request Submitted!'}
               </h3>
               <p className="text-xs text-slate-500 max-w-sm mx-auto">
-                {submittedPaymentStatus === 'advance_paid'
-                  ? `Your 20% advance payment has been verified. The service provider receives your confirmed rental booking request.`
+                {submittedPaymentStatus === 'confirmed' || submittedPaymentStatus === 'advance_paid'
+                  ? `Your 20% advance payment has been verified. paymentStatus: confirmed. The service provider receives your rental request.`
                   : `Your rental request is sent to the provider with 20% Advance status set to Pending.`}
               </p>
             </div>
@@ -276,7 +278,7 @@ export const BookingModal = ({
                   href={upiDeepLink}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center justify-center space-x-2 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold py-2.5 px-4 rounded-2xl text-xs shadow-xs transition-all w-full mt-1"
+                  className="inline-flex items-center justify-center space-x-2 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold px-4 rounded-2xl text-xs shadow-xs w-full mt-1 touch-action"
                 >
                   <Wallet className="w-4 h-4 text-amber-300" />
                   <span>Pay ₹{advanceAmount} via GPay / PhonePe / Paytm App 📱</span>
@@ -302,8 +304,8 @@ export const BookingModal = ({
                 <button
                   type="button"
                   disabled={submittingBooking}
-                  onClick={() => executeBookingSubmission('advance_paid')}
-                  className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold py-2.5 rounded-2xl text-xs shadow-xs disabled:opacity-50 flex items-center justify-center space-x-1.5"
+                  onClick={() => executeBookingSubmission('confirmed')}
+                  className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold rounded-2xl text-xs shadow-xs disabled:opacity-50 flex items-center justify-center space-x-1.5 touch-action"
                 >
                   <CheckCircle className="w-4 h-4" />
                   <span>{submittingBooking ? 'Verifying Payment...' : `I Have Paid 20% Advance (${formatRupees(advanceAmount)})`}</span>
@@ -483,7 +485,7 @@ export const BookingModal = ({
                 <button
                   type="submit"
                   disabled={submittingBooking}
-                  className="bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold px-5 py-2.5 rounded-2xl text-xs shadow-md shadow-indigo-600/20 disabled:opacity-50 flex items-center space-x-1.5"
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold px-5 rounded-2xl text-xs shadow-md shadow-indigo-600/20 disabled:opacity-50 flex items-center space-x-1.5 touch-action"
                 >
                   <span>{paymentMethod === 'cod' ? 'Confirm Booking (Cash / Pending)' : `Proceed to Pay 20% Advance (${formatRupees(advanceAmount)}) →`}</span>
                 </button>

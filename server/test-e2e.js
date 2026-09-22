@@ -229,6 +229,27 @@ async function runE2ETests() {
     bookingId = bookingJson.booking._id;
     console.log(`[PASS] 4.3 Booking Created (ID: ${bookingId}): 20% Advance ₹${bookingJson.booking.advancePaidInRupees} Held in Escrow.`);
 
+    if (bookingJson.booking.paymentStatus !== 'confirmed') {
+      throw new Error(`Expected paymentStatus confirmed, got ${bookingJson.booking.paymentStatus}`);
+    }
+    console.log(`[PASS] 4.4 Payment Status Flag: paymentStatus='${bookingJson.booking.paymentStatus}'`);
+
+    const seekerNotesRes = await fetch(`${API_BASE}/notifications?unread=true`, {
+      headers: { Authorization: `Bearer ${seekerToken}` }
+    });
+    const seekerNotesJson = await seekerNotesRes.json();
+    const paymentNote = (seekerNotesJson.notifications || []).find(n => n.type === 'payment_confirmed');
+    if (!paymentNote) throw new Error('Seeker did not receive payment_confirmed notification');
+    console.log(`[PASS] 4.5 Automated Payment Notification: "${paymentNote.title}"`);
+
+    const providerNotesRes = await fetch(`${API_BASE}/notifications?unread=true`, {
+      headers: { Authorization: `Bearer ${providerToken}` }
+    });
+    const providerNotesJson = await providerNotesRes.json();
+    const providerPayNote = (providerNotesJson.notifications || []).find(n => n.type === 'payment_confirmed');
+    if (!providerPayNote) throw new Error('Provider did not receive payment_confirmed notification');
+    console.log(`[PASS] 4.6 Provider Dashboard Payment Banner Triggered`);
+
 
     // ------------------------------------------------------------------------
     // TEST PHASE 5: PROVIDER FIELD ROUTE NAVIGATION & MAP INTEGRATION

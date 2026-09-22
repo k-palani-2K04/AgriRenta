@@ -1,0 +1,30 @@
+version: '3.8'
+
+services:
+  mongodb:
+    image: mongo:latest
+    container_name: agrirenta-mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    restart: always
+
+  server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: agrirenta-server
+    ports:
+      - "5000:5000"
+    environment:
+      - PORT=5000
+      - MONGO_URI=mongodb://mongodb:27017/agrirenta
+      - JWT_SECRET=agrirenta_super_secret_jwt_key_2026
+      - NODE_ENV=production
+    depends_on:
+      - mongodb
+    restart: always
+
+volumes:
+  mongo-data:

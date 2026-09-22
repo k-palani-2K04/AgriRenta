@@ -66,6 +66,11 @@ export const ProviderDashboard = () => {
   // Modal State
   const [showModal, setShowModal] = useState(false);
   const [editingServiceId, setEditingServiceId] = useState(null);
+  
+  // AI Predictive Pricing State
+  const [aiPrediction, setAiPrediction] = useState(null);
+  const [predictingPrice, setPredictingPrice] = useState(false);
+
   const [formData, setFormData] = useState({
     title: '',
     category: 'Machinery & Farm Equipment',
@@ -87,6 +92,31 @@ export const ProviderDashboard = () => {
   const [imagePreview, setImagePreview] = useState('');
   const [completedEarnings, setCompletedEarnings] = useState(0);
   const [submitting, setSubmitting] = useState(false);
+
+  // Fetch AI Price Prediction
+  const handlePredictPrice = async () => {
+    try {
+      setPredictingPrice(true);
+      const res = await axios.post('/api/ai/predict-price', {
+        category: formData.category,
+        title: formData.title,
+        taskType: formData.taskType,
+        pricingUnit: formData.pricingUnit,
+        state: formData.state,
+        district: formData.district,
+        workforceType: formData.workforceType,
+        workerCount: formData.workerCount,
+        specializedTasks: formData.specializedTasks
+      });
+      if (res.data && res.data.predictedPrice) {
+        setAiPrediction(res.data);
+      }
+    } catch (err) {
+      console.error('AI Price prediction error:', err);
+    } finally {
+      setPredictingPrice(false);
+    }
+  };
 
   // Fetch Services & Completed Earnings
   const fetchServices = async () => {
@@ -883,19 +913,86 @@ export const ProviderDashboard = () => {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">
-                    Rate in Rupees (₹) *
-                  </label>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block text-xs font-bold text-slate-700">
+                      Rate in Rupees (₹) *
+                    </label>
+                    <button
+                      type="button"
+                      onClick={handlePredictPrice}
+                      disabled={predictingPrice}
+                      className="text-[10px] bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold px-2 py-0.5 rounded-lg border border-indigo-200 flex items-center space-x-1"
+                    >
+                      <Sparkles className="w-3 h-3 text-amber-500" />
+                      <span>{predictingPrice ? 'Calculating...' : '🤖 AI Recommend Price'}</span>
+                    </button>
+                  </div>
                   <input
                     type="number"
                     required
                     min="1"
-                    placeholder="e.g. 600"
+                    placeholder="e.g. 1200"
                     value={formData.priceInRupees}
                     onChange={(e) => setFormData({ ...formData, priceInRupees: e.target.value })}
-                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-medium focus:outline-hidden focus:border-indigo-600"
+                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold text-indigo-900 focus:outline-hidden focus:border-indigo-600"
                   />
                 </div>
+              </div>
+
+              {/* AI/ML Predictive Pricing Assistant Widget */}
+              <div className="bg-gradient-to-br from-indigo-950 via-slate-900 to-indigo-900 p-4 rounded-2xl text-white space-y-3 shadow-md border border-indigo-500/30">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <Sparkles className="w-4 h-4 text-amber-400 animate-pulse" />
+                    <span className="text-xs font-extrabold tracking-tight">AI Predictive Pricing Engine</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handlePredictPrice}
+                    disabled={predictingPrice}
+                    className="bg-indigo-600 hover:bg-indigo-500 active:scale-95 text-white font-bold px-3 py-1 rounded-xl text-[11px] shadow-xs flex items-center space-x-1"
+                  >
+                    <span>{predictingPrice ? 'Calculating ML...' : '🤖 Predict Optimal Rate'}</span>
+                  </button>
+                </div>
+
+                {aiPrediction ? (
+                  <div className="bg-white/10 backdrop-blur-md border border-white/15 p-3.5 rounded-xl space-y-2.5 text-xs">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-[10px] text-indigo-200 font-semibold uppercase tracking-wider">AI Target Recommended Rate</p>
+                        <p className="text-2xl font-black text-amber-300">₹{aiPrediction.predictedPrice} <span className="text-xs font-normal text-indigo-200">/ {aiPrediction.unit}</span></p>
+                      </div>
+                      <div className="text-right">
+                        <span className="inline-block bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-[10px] font-extrabold px-2 py-0.5 rounded-md">
+                          ✓ {aiPrediction.confidenceScore} ML Accuracy
+                        </span>
+                        <p className="text-[10px] text-emerald-300 font-bold mt-1">{aiPrediction.demandLevel}</p>
+                      </div>
+                    </div>
+
+                    <div className="pt-2 border-t border-white/10 flex items-center justify-between text-[11px]">
+                      <span className="text-indigo-200 font-medium">Fair Market Range: <strong>₹{aiPrediction.minPrice} - ₹{aiPrediction.maxPrice}</strong></span>
+                      <button
+                        type="button"
+                        onClick={() => setFormData((prev) => ({ ...prev, priceInRupees: aiPrediction.predictedPrice }))}
+                        className="bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold px-3 py-1 rounded-xl text-[11px] shadow-xs active:scale-95 transition-all"
+                      >
+                        Apply AI Rate (₹{aiPrediction.predictedPrice}) ✓
+                      </button>
+                    </div>
+
+                    {aiPrediction.insights?.recommendationNote && (
+                      <p className="text-[10px] text-slate-300 italic pt-1 border-t border-white/10">
+                        "{aiPrediction.insights.recommendationNote}"
+                      </p>
+                    )}
+                  </div>
+                ) : (
+                  <p className="text-[11px] text-indigo-200/90 font-medium">
+                    Click <strong>"Predict Optimal Rate"</strong> to let our AI Model calculate real-time regional rates based on {formData.district || 'district'} market demand and current agricultural season.
+                  </p>
+                )}
               </div>
 
               {/* Service Location & Live GPS Section */}

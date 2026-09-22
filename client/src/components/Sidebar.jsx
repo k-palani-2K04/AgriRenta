@@ -14,6 +14,7 @@ import {
   Briefcase,
   Navigation,
   Bell,
+  ClipboardList,
   ShieldCheck
 } from 'lucide-react';
 
@@ -22,38 +23,45 @@ export const Sidebar = ({ isOpen, onClose }) => {
   const role = user?.role || 'farmer';
   const [pendingRequestsCount, setPendingRequestsCount] = useState(0);
 
-  // Fetch pending requests badge count for provider with automated 3-second live polling
+  // Fetch pending requests badge count for provider with automated background polling
   useEffect(() => {
     if (user && user.role === 'provider') {
       const fetchPendingCount = async () => {
+        if (typeof document !== 'undefined' && document.hidden) return;
         try {
           const res = await axios.get('/api/bookings/provider-requests');
           if (res.data.success) {
             setPendingRequestsCount(res.data.pendingCount || 0);
           }
-        } catch (err) {
-          console.error('Error fetching pending requests count:', err);
+        } catch {
+          // Silent catch when backend is restarting or offline
         }
       };
 
       fetchPendingCount();
-      const interval = setInterval(fetchPendingCount, 3000);
+      const interval = setInterval(fetchPendingCount, 8000);
       return () => clearInterval(interval);
     }
   }, [user]);
 
   const navItems = [
     {
+      title: 'Admin Escrow Hub',
+      path: '/admin/dashboard',
+      icon: ShieldCheck,
+      roles: ['admin']
+    },
+    {
       title: 'Marketplace',
       path: '/marketplace',
       icon: Tractor,
-      roles: ['farmer']
+      roles: ['farmer', 'admin']
     },
     {
       title: 'My Bookings',
       path: '/my-bookings',
       icon: Calendar,
-      roles: ['farmer']
+      roles: ['farmer', 'admin']
     },
     {
       title: 'Provider Control Center',
@@ -64,7 +72,7 @@ export const Sidebar = ({ isOpen, onClose }) => {
     {
       title: 'Rental Requests',
       path: '/provider/requests',
-      icon: Bell,
+      icon: ClipboardList,
       badge: pendingRequestsCount > 0 ? pendingRequestsCount : null,
       roles: ['provider']
     }
@@ -84,7 +92,7 @@ export const Sidebar = ({ isOpen, onClose }) => {
 
       {/* Sidebar Panel */}
       <aside
-        className={`fixed lg:sticky top-16 h-[calc(100vh-4rem)] left-0 z-30 lg:z-20 w-64 shrink-0 bg-white border-r border-slate-200/80 flex flex-col transition-transform duration-200 ease-in-out ${
+        className={`fixed lg:static top-16 lg:top-0 h-[calc(100vh-4rem)] lg:h-full left-0 z-30 lg:z-10 w-64 shrink-0 bg-white border-r border-slate-200/80 flex flex-col transition-transform duration-200 ease-in-out ${
           isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
         }`}
       >

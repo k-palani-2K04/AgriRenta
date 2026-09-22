@@ -121,6 +121,42 @@ const bookingSchema = new mongoose.Schema(
       type: Number,
       default: 0
     },
+    jobPhotos: {
+      preService: [
+        {
+          url: { type: String, required: true },
+          uploadedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+          role: { type: String, default: '' },
+          uploadedAt: { type: Date, default: Date.now }
+        }
+      ],
+      postService: [
+        {
+          url: { type: String, required: true },
+          uploadedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+          role: { type: String, default: '' },
+          uploadedAt: { type: Date, default: Date.now }
+        }
+      ]
+    },
+    attendanceLogs: [
+      {
+        date: { type: Date, required: true },
+        workersPresent: { type: Number, default: 0, min: 0 },
+        tasksCompleted: { type: [String], default: [] },
+        notes: { type: String, default: '' },
+        loggedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+        createdAt: { type: Date, default: Date.now }
+      }
+    ],
+    payoutChannel: {
+      type: String,
+      default: ''
+    },
+    payoutVpa: {
+      type: String,
+      default: ''
+    },
     farmerLocation: {
       latitude: { type: Number, default: 16.3067 },
       longitude: { type: Number, default: 80.4365 },
