@@ -49,6 +49,12 @@ npm run dev
 - **Frontend Application**: `http://localhost:5173`
 - **Backend API**: `http://localhost:5000/api`
 
+### 🌐 Public Mobile Access via Tunneling
+To expose your local backend server to smartphones or remote testing devices, run:
+```bash
+npx localtunnel --port 5000 --local-host 127.0.0.1
+```
+
 ---
 
 ## 🔑 Demo Login Credentials
