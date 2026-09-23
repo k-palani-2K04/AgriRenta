@@ -61,9 +61,9 @@ npx localtunnel --port 5000 --local-host 127.0.0.1
 
 | Role | Phone Number | Password |
 | :--- | :--- | :--- |
-| **Farmer (Seeker)** | `9876543210` | `password123` |
-| **Provider (Machinery)** | `9876543211` | `password123` |
-| **Platform Admin** | `9030585591` | `admin@123` |
+| **Farmer (Seeker)** | `9876543210` | `AgriPass#2026` |
+| **Provider (Machinery)** | `9876543211` | `AgriPass#2026` |
+| **Platform Admin** | `9030585591` | `AgriAdmin#2026` |
 
 ---
 

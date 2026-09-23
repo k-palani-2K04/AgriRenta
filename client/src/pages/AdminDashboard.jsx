@@ -164,50 +164,48 @@ export const AdminDashboard = () => {
   return (
     <div className="space-y-6 pb-12">
       
-      {/* Header Banner */}
-      <div className="bg-gradient-to-br from-slate-900 via-emerald-950 to-teal-900 rounded-3xl p-6 sm:p-8 text-white shadow-xl relative overflow-hidden">
-        <div className="relative z-10 space-y-3">
-          <div className="inline-flex items-center space-x-2 bg-white/10 backdrop-blur-md px-3.5 py-1.5 rounded-full text-xs font-semibold text-emerald-200 border border-white/20">
-            <ShieldCheck className="w-4 h-4 text-emerald-400" />
-            <span>Platform Owner & Admin Escrow Hub</span>
+      {/* Header Banner (Light Cream Container Design) */}
+      <div className="bg-[#FAF8F5] rounded-3xl border border-slate-200/90 p-6 sm:p-8 shadow-xs space-y-4">
+        <div className="inline-flex items-center space-x-2 bg-emerald-50 text-emerald-800 px-3.5 py-1.5 rounded-full text-xs font-bold border border-emerald-200">
+          <ShieldCheck className="w-4 h-4 text-emerald-600" />
+          <span>Platform Owner &amp; Admin Escrow Hub</span>
+        </div>
+
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
+              Admin Escrow &amp; Provider Payout Dashboard
+            </h1>
+            <p className="text-slate-500 text-xs sm:text-sm mt-1 max-w-xl font-medium">
+              20% Advance payments collected via Admin UPI (<span className="font-mono text-emerald-700 font-bold">9030585591@ybl</span>) are held until service seekers confirm job completion.
+            </p>
           </div>
 
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div>
-              <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
-                Admin Escrow & Provider Payout Dashboard
-              </h1>
-              <p className="text-emerald-200 text-xs sm:text-sm mt-1 max-w-xl">
-                20% Advance payments collected via Admin UPI (<span className="font-mono text-amber-300 font-bold">9030585591@ybl</span>) are held until service seekers confirm job completion.
-              </p>
-            </div>
+          <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto">
+            <button
+              onClick={fetchAdminData}
+              className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-3.5 py-2 rounded-2xl text-xs shadow-xs transition-all cursor-pointer"
+            >
+              Refresh 🔄
+            </button>
 
-            <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto">
-              <button
-                onClick={fetchAdminData}
-                className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-3.5 py-2 rounded-2xl text-xs shadow-sm"
-              >
-                Refresh 🔄
-              </button>
+            <button
+              onClick={handleClearAllBookings}
+              className="bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 font-bold px-3.5 py-2 rounded-2xl text-xs shadow-2xs transition-all flex items-center gap-1 cursor-pointer"
+              title="Delete all booking records from database"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+              <span>Clear All Bookings</span>
+            </button>
 
-              <button
-                onClick={handleClearAllBookings}
-                className="bg-rose-600 hover:bg-rose-700 text-white font-bold px-3.5 py-2 rounded-2xl text-xs shadow-sm flex items-center gap-1"
-                title="Delete all booking records from database"
-              >
-                <Trash2 className="w-3.5 h-3.5" />
-                <span>Clear All Bookings</span>
-              </button>
-
-              <button
-                onClick={handleClearAllServices}
-                className="bg-amber-600 hover:bg-amber-700 text-white font-bold px-3.5 py-2 rounded-2xl text-xs shadow-sm flex items-center gap-1"
-                title="Delete all provider service listings from database"
-              >
-                <Trash2 className="w-3.5 h-3.5" />
-                <span>Clear Provider Listings</span>
-              </button>
-            </div>
+            <button
+              onClick={handleClearAllServices}
+              className="bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 font-bold px-3.5 py-2 rounded-2xl text-xs shadow-2xs transition-all flex items-center gap-1 cursor-pointer"
+              title="Delete all provider service listings from database"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+              <span>Clear Provider Listings</span>
+            </button>
           </div>
         </div>
       </div>

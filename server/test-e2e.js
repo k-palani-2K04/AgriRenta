@@ -36,7 +36,7 @@ async function runE2ETests() {
       body: JSON.stringify({
         name: `Seeker Farmer ${timestamp}`,
         phone: seekerPhone,
-        password: 'password123',
+        password: 'AgriPass#2026',
         role: 'farmer',
         state: 'Andhra Pradesh',
         district: 'Tirupati',
@@ -56,7 +56,7 @@ async function runE2ETests() {
       body: JSON.stringify({
         name: `Provider Srinivas ${timestamp}`,
         phone: providerPhone,
-        password: 'password123',
+        password: 'AgriPass#2026',
         role: 'provider',
         upiId: `${providerPhone}@ybl`,
         state: 'Andhra Pradesh',

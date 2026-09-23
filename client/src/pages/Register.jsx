@@ -56,7 +56,7 @@ export const Register = () => {
         upiId: upiId || (phone ? `${phone}@upi` : ''),
         state,
         district,
-        village
+        village: village.trim() || 'Central Village'
       });
       if (role === 'provider') {
         navigate('/provider/dashboard');
@@ -285,11 +285,11 @@ export const Register = () => {
                   </div>
                   <input
                     type="text"
-                    required
-                    placeholder="Enter village name"
+                    placeholder="Enter village name (optional)"
                     value={village}
                     onChange={(e) => setVillage(e.target.value)}
                     className="w-full pl-10 pr-3.5 py-2.5 bg-slate-50/80 border border-slate-200 rounded-2xl text-sm text-slate-900 focus:outline-hidden focus:border-emerald-600 focus:bg-white focus:ring-3 focus:ring-emerald-100 transition-all font-medium"
+                    data-testid="register-village-input"
                   />
                 </div>
               </div>

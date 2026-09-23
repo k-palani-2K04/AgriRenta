@@ -60,8 +60,13 @@ export const ProviderDashboard = () => {
 
   const [services, setServices] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [isAcceptingBookings, setIsAcceptingBookings] = useState(true);
+  const [isAcceptingBookings, setIsAcceptingBookings] = useState(() => {
+    if (user?._id) {
+      const stored = localStorage.getItem(`provider_accepting_${user._id}`);
+      if (stored !== null) return JSON.parse(stored);
+    }
+    return true;
+  });
 
   // Modal State
   const [showModal, setShowModal] = useState(false);
@@ -124,7 +129,16 @@ export const ProviderDashboard = () => {
       setLoading(true);
       const res = await axios.get('/api/provider/services');
       if (res.data.success) {
-        setServices(res.data.services || []);
+        const fetchedServices = res.data.services || [];
+        setServices(fetchedServices);
+        // Persist static toggle state derived from MongoDB listings
+        if (fetchedServices.length > 0) {
+          const hasAvailable = fetchedServices.some(s => s.status === 'available');
+          setIsAcceptingBookings(hasAvailable);
+          if (user?._id) {
+            localStorage.setItem(`provider_accepting_${user._id}`, JSON.stringify(hasAvailable));
+          }
+        }
       }
     } catch (err) {
       console.error('Error fetching provider services:', err);
@@ -378,6 +392,27 @@ export const ProviderDashboard = () => {
     }
   };
 
+  // Toggle Master Availability (Accepting Requests)
+  const handleToggleMasterAvailability = async () => {
+    const nextState = !isAcceptingBookings;
+    setIsAcceptingBookings(nextState);
+    if (user?._id) {
+      localStorage.setItem(`provider_accepting_${user._id}`, JSON.stringify(nextState));
+    }
+
+    try {
+      const targetStatus = nextState ? 'available' : 'busy';
+      if (services.length > 0) {
+        await Promise.all(
+          services.map(s => axios.put(`/api/provider/services/${s._id}`, { status: targetStatus }))
+        );
+      }
+      fetchServices();
+    } catch (err) {
+      console.error('Error updating master availability:', err);
+    }
+  };
+
   const activeCount = services.filter(s => s.status === 'available').length;
   const totalCount = services.length;
   const estimatedCapacityEarnings = services.reduce((sum, s) => sum + (s.priceInRupees || 0), 0);
@@ -385,73 +420,95 @@ export const ProviderDashboard = () => {
   return (
     <div className="space-y-6">
       
-      {/* Top Banner & Earnings Overview */}
-      <div className="bg-gradient-to-br from-emerald-800 via-emerald-700 to-teal-900 rounded-3xl p-6 sm:p-8 text-white shadow-xl shadow-emerald-900/20 relative overflow-hidden">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
-          
+      {/* Top Header & Stats Overview (Light Cream Container Design) */}
+      <div className="space-y-6">
+        
+        {/* Header Title & Availability Control Bar */}
+        <div className="bg-[#FAF8F5] rounded-3xl border border-slate-200/90 p-6 sm:p-8 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="space-y-2">
-            <div className="inline-flex items-center space-x-2 bg-white/15 backdrop-blur-md px-3.5 py-1.5 rounded-full text-xs font-semibold text-emerald-100 border border-white/20">
-              <ShieldCheck className="w-3.5 h-3.5 text-amber-300" />
+            <div className="inline-flex items-center space-x-2 bg-emerald-50 text-emerald-800 px-3.5 py-1.5 rounded-full text-xs font-bold border border-emerald-200/80">
+              <ShieldCheck className="w-4 h-4 text-emerald-600" />
               <span>Provider Control Center</span>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
+            <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
               Provider Dashboard
             </h1>
-            <p className="text-emerald-100 text-sm max-w-xl flex items-center gap-1.5">
-              <Compass className="w-4 h-4 text-amber-300 shrink-0" />
-              <span>Location: <strong>{user?.village ? `${user.village}, ` : ''}{displayDistrict}{displayState ? `, ${displayState}` : ''}</strong> ({activeCoords?.latitude?.toFixed(4) || '16.3067'}° N, {activeCoords?.longitude?.toFixed(4) || '80.4365'}° E)</span>
+            <p className="text-slate-500 text-xs sm:text-sm flex items-center gap-1.5 font-medium">
+              <Compass className="w-4 h-4 text-emerald-600 shrink-0" />
+              <span>Location: <strong className="text-slate-800">{user?.village ? `${user.village}, ` : ''}{displayDistrict}{displayState ? `, ${displayState}` : ''}</strong> ({activeCoords?.latitude?.toFixed(4) || '16.3067'}° N, {activeCoords?.longitude?.toFixed(4) || '80.4365'}° E)</span>
             </p>
           </div>
 
-          {/* Master Availability Toggle */}
-          <div className="bg-white/10 backdrop-blur-md border border-white/20 p-4 rounded-2xl flex items-center justify-between space-x-4 min-w-[240px]">
+          {/* Master Availability Toggle Box */}
+          <div className="bg-white border border-slate-200/90 p-4 rounded-2xl flex items-center justify-between space-x-4 min-w-[260px] shadow-2xs">
             <div>
-              <p className="text-xs font-semibold text-emerald-100">Booking Status</p>
-              <p className="text-sm font-bold text-white">
+              <p className="text-xs font-semibold text-slate-500">Booking Status</p>
+              <p className={`text-sm font-black ${isAcceptingBookings ? 'text-emerald-700' : 'text-slate-500'}`}>
                 {isAcceptingBookings ? 'Accepting Requests' : 'Currently Paused'}
               </p>
             </div>
             <button
-              onClick={() => setIsAcceptingBookings(!isAcceptingBookings)}
-              className="text-white hover:opacity-90 transition-opacity"
+              onClick={handleToggleMasterAvailability}
+              className="focus:outline-none transition-transform active:scale-95 cursor-pointer"
               title="Toggle Master Availability"
+              data-testid="provider-availability-toggle"
             >
               {isAcceptingBookings ? (
-                <ToggleRight className="w-10 h-10 text-emerald-300" />
+                <ToggleRight className="w-11 h-11 text-emerald-600" />
               ) : (
-                <ToggleLeft className="w-10 h-10 text-slate-300" />
+                <ToggleLeft className="w-11 h-11 text-slate-400" />
               )}
             </button>
           </div>
-
         </div>
 
-        {/* Metrics Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-6 pt-6 border-t border-white/15">
-          <div className="bg-white/10 backdrop-blur-xs p-4 rounded-2xl border border-white/10">
-            <p className="text-xs text-indigo-100 font-medium">Total Listings</p>
-            <p className="text-2xl font-black text-white mt-1">{totalCount}</p>
+        {/* 4 Clean Metric Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="bg-[#FAF8F5] p-5 rounded-2xl border border-slate-200/90 shadow-xs hover:border-emerald-300 hover:shadow-md transition-all">
+            <div className="flex items-center justify-between text-slate-500 text-xs font-bold">
+              <span>Total Listings</span>
+              <div className="bg-emerald-50 text-emerald-600 p-2 rounded-xl">
+                <Tractor className="w-4 h-4" />
+              </div>
+            </div>
+            <p className="text-3xl font-black text-slate-900 mt-2">{totalCount}</p>
           </div>
 
-          <div className="bg-white/10 backdrop-blur-xs p-4 rounded-2xl border border-white/10">
-            <p className="text-xs text-indigo-100 font-medium">Active Services</p>
-            <p className="text-2xl font-black text-emerald-300 mt-1">{activeCount}</p>
+          <div className="bg-[#FAF8F5] p-5 rounded-2xl border border-slate-200/90 shadow-xs hover:border-emerald-300 hover:shadow-md transition-all">
+            <div className="flex items-center justify-between text-slate-500 text-xs font-bold">
+              <span>Active Services</span>
+              <div className="bg-emerald-50 text-emerald-600 p-2 rounded-xl">
+                <CheckCircle className="w-4 h-4" />
+              </div>
+            </div>
+            <p className="text-3xl font-black text-emerald-600 mt-2">{activeCount}</p>
           </div>
 
-          <div className="bg-white/10 backdrop-blur-xs p-4 rounded-2xl border border-white/10">
-            <p className="text-xs text-indigo-100 font-medium">Net Payout Earned (15%/100%)</p>
-            <p className="text-2xl font-black text-amber-300 mt-1">
+          <div className="bg-[#FAF8F5] p-5 rounded-2xl border border-slate-200/90 shadow-xs hover:border-emerald-300 hover:shadow-md transition-all">
+            <div className="flex items-center justify-between text-slate-500 text-xs font-bold">
+              <span>Net Payout Earned</span>
+              <div className="bg-amber-50 text-amber-600 p-2 rounded-xl">
+                <DollarSign className="w-4 h-4" />
+              </div>
+            </div>
+            <p className="text-3xl font-black text-slate-900 mt-2">
               {formatRupees(completedEarnings)}
             </p>
           </div>
 
-          <div className="bg-white/10 backdrop-blur-xs p-4 rounded-2xl border border-white/10">
-            <p className="text-xs text-indigo-100 font-medium">Rate Capacity</p>
-            <p className="text-2xl font-black text-sky-200 mt-1">
+          <div className="bg-[#FAF8F5] p-5 rounded-2xl border border-slate-200/90 shadow-xs hover:border-emerald-300 hover:shadow-md transition-all">
+            <div className="flex items-center justify-between text-slate-500 text-xs font-bold">
+              <span>Rate Capacity</span>
+              <div className="bg-teal-50 text-teal-600 p-2 rounded-xl">
+                <Sparkles className="w-4 h-4" />
+              </div>
+            </div>
+            <p className="text-3xl font-black text-slate-900 mt-2">
               {formatRupees(estimatedCapacityEarnings)}
             </p>
           </div>
         </div>
+
       </div>
 
       {/* Action Header */}

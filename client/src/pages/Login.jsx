@@ -100,7 +100,7 @@ export const Login = () => {
               onClick={() => {
                 setLoginMode('admin');
                 setPhone('9030585591');
-                setPassword('admin@123');
+                setPassword('AgriAdmin#2026');
                 setError('');
               }}
               className={`py-2.5 rounded-2xl flex items-center justify-center space-x-1.5 transition-all ${
@@ -126,7 +126,7 @@ export const Login = () => {
                 <div className="grid grid-cols-2 gap-2">
                   <button
                     type="button"
-                    onClick={() => handleFillDemo('9876543210', 'password123', 'user')}
+                    onClick={() => handleFillDemo('9876543210', 'AgriPass#2026', 'user')}
                     className="bg-white hover:bg-emerald-50 border border-slate-200 text-emerald-950 py-1.5 px-2.5 rounded-xl text-xs font-semibold transition-all text-left flex items-center justify-between group shadow-2xs"
                   >
                     <div>
@@ -138,7 +138,7 @@ export const Login = () => {
 
                   <button
                     type="button"
-                    onClick={() => handleFillDemo('9876543211', 'password123', 'user')}
+                    onClick={() => handleFillDemo('9876543211', 'AgriPass#2026', 'user')}
                     className="bg-white hover:bg-emerald-50 border border-slate-200 text-emerald-950 py-1.5 px-2.5 rounded-xl text-xs font-semibold transition-all text-left flex items-center justify-between group shadow-2xs"
                   >
                     <div>
@@ -157,14 +157,14 @@ export const Login = () => {
                   </span>
                   <button
                     type="button"
-                    onClick={() => handleFillDemo('9030585591', 'admin@123', 'admin')}
+                    onClick={() => handleFillDemo('9030585591', 'AgriAdmin#2026', 'admin')}
                     className="text-[10px] bg-emerald-600 text-white px-3 py-1 rounded-md font-bold hover:bg-emerald-700 transition-colors"
                   >
                     Auto Fill Admin
                   </button>
                 </div>
                 <p className="text-[11px] text-emerald-800 font-medium">
-                  Admin Login Phone: <strong className="font-mono text-emerald-950">9030585591</strong> | Pass: <strong className="font-mono text-emerald-950">admin@123</strong>
+                  Admin Login Phone: <strong className="font-mono text-emerald-950">9030585591</strong> | Pass: <strong className="font-mono text-emerald-950">AgriAdmin#2026</strong>
                 </p>
               </div>
             )}

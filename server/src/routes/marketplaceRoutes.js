@@ -87,7 +87,7 @@ router.get('/services', async (req, res) => {
       refLng = 80.4365;
     }
 
-    // Attach Haversine distance to each service item
+    // Attach Haversine distance to each service item using exact location coordinates
     let formattedServices = services.map((service) => {
       const sObj = service.toObject();
 
@@ -96,15 +96,9 @@ router.get('/services', async (req, res) => {
       let serviceLat = districtFallback.latitude;
       let serviceLng = districtFallback.longitude;
 
-      if (sObj.location && typeof sObj.location.latitude === 'number' && typeof sObj.location.longitude === 'number') {
-        const rawLat = sObj.location.latitude;
-        const rawLng = sObj.location.longitude;
-        // Check if stored coordinates match district area (within ~30km). If stale provider profile coords were stored, override with accurate district coords
-        const devKm = calculateHaversineDistance(districtFallback.latitude, districtFallback.longitude, rawLat, rawLng);
-        if (devKm <= 30) {
-          serviceLat = rawLat;
-          serviceLng = rawLng;
-        }
+      if (sObj.location && typeof sObj.location.latitude === 'number' && typeof sObj.location.longitude === 'number' && sObj.location.latitude !== 0) {
+        serviceLat = sObj.location.latitude;
+        serviceLng = sObj.location.longitude;
       }
 
       const distanceKm = calculateHaversineDistance(refLat, refLng, serviceLat, serviceLng);
@@ -116,19 +110,11 @@ router.get('/services', async (req, res) => {
       return sObj;
     });
 
-    // Apply generous distance buffer on server (e.g., maxDistance + 50km or max 150km) 
-    // so client-side Haversine distance calculations have full data to filter dynamically
-    if (maxDistanceKm && !isNaN(Number(maxDistanceKm))) {
-      const baseDist = Number(maxDistanceKm);
-      const serverMaxDist = Math.max(baseDist + 50, 150); // Generous buffer to prevent accidental drop of local services
-      formattedServices = formattedServices.filter(s => s.distanceKm <= serverMaxDist || (district && (s.district === district || s.providerId?.district === district)));
-    }
-
     return res.json({
       success: true,
       count: formattedServices.length,
       refLocation: { latitude: refLat, longitude: refLng },
-      maxDistanceAppliedKm: Number(maxDistanceKm) || 16,
+      maxDistanceAppliedKm: Number(maxDistanceKm) || 25,
       services: formattedServices
     });
   } catch (error) {

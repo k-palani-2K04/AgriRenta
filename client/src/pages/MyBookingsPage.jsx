@@ -111,20 +111,18 @@ export const MyBookingsPage = () => {
     <div className="space-y-6">
       <ConfettiBurst active={confetti} onDone={() => setConfetti(false)} />
       
-      {/* Banner */}
-      <div className="bg-gradient-to-br from-emerald-800 via-emerald-700 to-teal-900 rounded-3xl p-6 sm:p-8 text-white shadow-xl shadow-emerald-900/20 relative overflow-hidden">
-        <div className="relative z-10 space-y-2">
-          <div className="inline-flex items-center space-x-2 bg-white/15 backdrop-blur-md px-3.5 py-1.5 rounded-full text-xs font-semibold text-emerald-100 border border-white/20">
-            <Calendar className="w-3.5 h-3.5 text-amber-300" />
-            <span>Farmer Rental Management</span>
-          </div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
-            My Equipment Bookings
-          </h1>
-          <p className="text-emerald-100 text-sm max-w-xl">
-            Track live requests, monitor machinery approach, confirm field work completion, and review historical transactions.
-          </p>
+      {/* Header Banner (Light Cream Container Design) */}
+      <div className="bg-[#FAF8F5] rounded-3xl border border-slate-200/90 p-6 sm:p-8 shadow-xs space-y-2">
+        <div className="inline-flex items-center space-x-2 bg-emerald-50 text-emerald-800 px-3.5 py-1.5 rounded-full text-xs font-bold border border-emerald-200/80">
+          <Calendar className="w-4 h-4 text-emerald-600" />
+          <span>Farmer Rental Management</span>
         </div>
+        <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
+          My Equipment Bookings
+        </h1>
+        <p className="text-slate-500 text-xs sm:text-sm max-w-xl font-medium">
+          Track live requests, monitor machinery approach, confirm field work completion, and review historical transactions.
+        </p>
       </div>
 
       {/* Tabs Navigation */}

@@ -122,30 +122,28 @@ export const ProviderRequestsPage = () => {
   return (
     <div className="space-y-6">
       
-      {/* Banner */}
-      <div className="bg-gradient-to-br from-emerald-800 via-emerald-700 to-teal-900 rounded-3xl p-6 sm:p-8 text-white shadow-xl shadow-emerald-900/20 relative overflow-hidden">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
-          <div className="space-y-2">
-            <div className="inline-flex items-center space-x-2 bg-white/15 backdrop-blur-md px-3.5 py-1.5 rounded-full text-xs font-semibold text-emerald-100 border border-white/20">
-              <ShieldCheck className="w-3.5 h-3.5 text-amber-300" />
-              <span>Rental Requests Center</span>
-            </div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
-              Incoming Rental Bookings
-            </h1>
-            <p className="text-emerald-100 text-sm max-w-xl">
-              Accept farmer rental requests, update machinery dispatch status, and launch live GPS field tracking.
-            </p>
+      {/* Header Banner (Light Cream Container Design) */}
+      <div className="bg-[#FAF8F5] rounded-3xl border border-slate-200/90 p-6 sm:p-8 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div className="space-y-2">
+          <div className="inline-flex items-center space-x-2 bg-emerald-50 text-emerald-800 px-3.5 py-1.5 rounded-full text-xs font-bold border border-emerald-200/80">
+            <ShieldCheck className="w-4 h-4 text-emerald-600" />
+            <span>Rental Requests Center</span>
           </div>
+          <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
+            Incoming Rental Bookings
+          </h1>
+          <p className="text-slate-500 text-xs sm:text-sm max-w-xl font-medium">
+            Accept farmer rental requests, update machinery dispatch status, and launch live GPS field tracking.
+          </p>
+        </div>
 
-          <div className="bg-white/10 backdrop-blur-md border border-white/20 p-4 rounded-2xl flex items-center space-x-3 min-w-[200px]">
-            <div className="bg-amber-400 text-amber-950 font-black text-xl w-10 h-10 rounded-xl flex items-center justify-center">
-              {pendingCount}
-            </div>
-            <div>
-              <p className="text-xs font-semibold text-emerald-100">Pending Requests</p>
-              <p className="text-xs text-amber-200 font-bold">Action Needed</p>
-            </div>
+        <div className="bg-slate-50 border border-slate-200/80 p-4 rounded-2xl flex items-center space-x-3 min-w-[200px] shadow-2xs">
+          <div className="bg-amber-400 text-slate-950 font-black text-xl w-10 h-10 rounded-xl flex items-center justify-center shadow-xs">
+            {pendingCount}
+          </div>
+          <div>
+            <p className="text-xs font-bold text-slate-700">Pending Requests</p>
+            <p className="text-xs text-amber-700 font-extrabold">Action Needed</p>
           </div>
         </div>
       </div>

@@ -13,7 +13,7 @@ async function runTests() {
     const farmerData = {
       name: 'Ramesh Farmer',
       phone: '9988776655',
-      password: 'password123',
+      password: 'AgriPass#2026',
       role: 'farmer',
       state: 'Andhra Pradesh',
       district: 'Guntur',
@@ -32,7 +32,7 @@ async function runTests() {
     const providerData = {
       name: 'Srinivas Provider',
       phone: '9988776644',
-      password: 'password123',
+      password: 'AgriPass#2026',
       role: 'provider',
       state: 'Telangana',
       district: 'Karimnagar',
@@ -51,7 +51,7 @@ async function runTests() {
     const loginRes = await fetch(`${API_BASE}/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ phone: '9988776655', password: 'password123' })
+      body: JSON.stringify({ phone: '9988776655', password: 'AgriPass#2026' })
     });
     const loginJson = await loginRes.json();
     console.log('✔ Farmer Login Response:', loginRes.status, loginJson.success ? 'PASS' : 'FAIL');

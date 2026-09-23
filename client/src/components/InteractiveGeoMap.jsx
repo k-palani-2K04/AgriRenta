@@ -304,15 +304,15 @@ export const InteractiveGeoMap = ({
         </div>
       )}
 
-      {/* 1. ZOMATO GREEN TOP HEADER BANNER */}
-      <div className="bg-[#0F8A43] text-white py-4 px-6 text-center shadow-md relative z-20">
-        <h2 className="text-xl sm:text-2xl font-extrabold tracking-tight">
+      {/* 1. LIGHT CREAM TOP HEADER BANNER */}
+      <div className="bg-[#FAF8F5] text-slate-900 border-b border-slate-200/90 py-4 px-6 text-center relative z-20">
+        <h2 className="text-xl sm:text-2xl font-black tracking-tight text-slate-900">
           {liveDistanceKm <= 0.3 ? '📍 Partner Arrived at Field Plot!' : statusText}
         </h2>
 
         {/* Time Pill Badge, Google Maps Link & Refresh Button */}
         <div className="mt-2.5 flex flex-wrap items-center justify-center gap-2">
-          <div className="bg-white/20 backdrop-blur-md px-4 py-1.5 rounded-full text-xs font-bold tracking-wide flex items-center space-x-2 border border-white/20">
+          <div className="bg-emerald-50 text-emerald-800 border border-emerald-200 px-4 py-1.5 rounded-full text-xs font-bold tracking-wide flex items-center space-x-2">
             <span>{liveEtaMins} mins</span>
             <span className="opacity-60">•</span>
             <span>On time ({liveDistanceKm} km road distance)</span>

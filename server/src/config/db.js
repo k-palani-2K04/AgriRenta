@@ -10,7 +10,7 @@ export const seedDemoUsers = async () => {
       farmer = await User.create({
         name: 'Ramesh Kumar',
         phone: '9876543210',
-        password: 'password123',
+        password: 'AgriPass#2026',
         role: 'farmer',
         state: 'Andhra Pradesh',
         district: 'Guntur',
@@ -18,6 +18,13 @@ export const seedDemoUsers = async () => {
         location: { latitude: 16.3067, longitude: 80.4365 }
       });
       console.log('[Seed] Demo Farmer account created (9876543210)');
+    } else {
+      const match = await farmer.matchPassword('AgriPass#2026');
+      if (!match) {
+        farmer.password = 'AgriPass#2026';
+        await farmer.save();
+        console.log('[Seed] Updated Demo Farmer password to AgriPass#2026');
+      }
     }
 
     // 2. Seed Demo Provider Account (Guntur: 16.3067, 80.4365)
@@ -26,7 +33,7 @@ export const seedDemoUsers = async () => {
       provider = await User.create({
         name: 'Srinivas Rao',
         phone: '9876543211',
-        password: 'password123',
+        password: 'AgriPass#2026',
         role: 'provider',
         upiId: '7912889876@upi',
         state: 'Andhra Pradesh',
@@ -36,21 +43,32 @@ export const seedDemoUsers = async () => {
       });
       console.log('[Seed] Demo Provider account created (9876543211)');
     } else {
-      // Ensure provider location is synced to Guntur
-      provider.state = 'Andhra Pradesh';
-      provider.district = 'Guntur';
-      provider.village = 'Tenali';
-      provider.location = { latitude: 16.3067, longitude: 80.4365 };
-      await provider.save();
+      let needsSave = false;
+      const match = await provider.matchPassword('AgriPass#2026');
+      if (!match) {
+        provider.password = 'AgriPass#2026';
+        needsSave = true;
+      }
+      if (provider.district !== 'Guntur' || provider.village !== 'Tenali') {
+        provider.state = 'Andhra Pradesh';
+        provider.district = 'Guntur';
+        provider.village = 'Tenali';
+        provider.location = { latitude: 16.3067, longitude: 80.4365 };
+        needsSave = true;
+      }
+      if (needsSave) {
+        await provider.save();
+        console.log('[Seed] Synced Demo Provider account');
+      }
     }
 
-    // 3. Seed Demo Admin Account (Phone: 9030585591 / Password: admin@123)
+    // 3. Seed Demo Admin Account (Phone: 9030585591 / Password: AgriAdmin#2026)
     let admin = await User.findOne({ $or: [{ phone: '9030585591' }, { role: 'admin' }] });
     if (!admin) {
       admin = await User.create({
         name: 'AgriRenta Admin',
         phone: '9030585591',
-        password: 'admin@123',
+        password: 'AgriAdmin#2026',
         role: 'admin',
         upiId: '9030585591@ybl',
         state: 'Andhra Pradesh',
@@ -58,13 +76,26 @@ export const seedDemoUsers = async () => {
         village: 'Guntur Central',
         location: { latitude: 16.3067, longitude: 80.4365 }
       });
-      console.log('[Seed] Demo Admin account created (9030585591 / admin@123)');
+      console.log('[Seed] Demo Admin account created (9030585591 / AgriAdmin#2026)');
     } else {
-      admin.phone = '9030585591';
-      admin.password = 'admin@123';
-      admin.role = 'admin';
-      await admin.save();
-      console.log('[Seed] Demo Admin account synced (9030585591 / admin@123)');
+      let needsSave = false;
+      if (admin.phone !== '9030585591') {
+        admin.phone = '9030585591';
+        needsSave = true;
+      }
+      const match = await admin.matchPassword('AgriAdmin#2026');
+      if (!match) {
+        admin.password = 'AgriAdmin#2026';
+        needsSave = true;
+      }
+      if (admin.role !== 'admin') {
+        admin.role = 'admin';
+        needsSave = true;
+      }
+      if (needsSave) {
+        await admin.save();
+        console.log('[Seed] Demo Admin account synced (9030585591 / AgriAdmin#2026)');
+      }
     }
 
     // 3. Seed Demo Services for Provider (Only 1 single listing: Farmtrac 50 tractor With Rotavator)

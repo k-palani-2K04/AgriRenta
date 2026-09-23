@@ -58,8 +58,8 @@ export const Marketplace = () => {
   const [selectedTaskType, setSelectedTaskType] = useState('all');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedPricingUnit, setSelectedPricingUnit] = useState('all');
-  const [maxPrice, setMaxPrice] = useState(5000);
-  const [maxDistanceKm, setMaxDistanceKm] = useState(16);
+  const [maxPrice, setMaxPrice] = useState(50000);
+  const [maxDistanceKm, setMaxDistanceKm] = useState(25);
   const [onlyAvailable, setOnlyAvailable] = useState(false);
   const [selectedWorkforceType, setSelectedWorkforceType] = useState('all');
   const [selectedSpecialization, setSelectedSpecialization] = useState('all');
@@ -151,16 +151,17 @@ export const Marketplace = () => {
   };
 
   // Fetch Marketplace Services from API
-  const fetchServices = async () => {
+  const fetchServices = async (showSkeleton = false) => {
     try {
-      setLoading(true);
+      if (showSkeleton || rawServices.length === 0) {
+        setLoading(true);
+      }
       const params = new URLSearchParams();
       if (selectedTaskType !== 'all') params.append('taskType', selectedTaskType);
       if (selectedCategory !== 'all') params.append('category', selectedCategory);
       if (selectedPricingUnit !== 'all') params.append('pricingUnit', selectedPricingUnit);
-      if (searchQuery) params.append('search', searchQuery);
       params.append('maxDistanceKm', maxDistanceKm);
-      if (clientLocation.latitude && clientLocation.longitude) {
+      if (clientLocation?.latitude && clientLocation?.longitude) {
         params.append('userLat', clientLocation.latitude);
         params.append('userLng', clientLocation.longitude);
       }
@@ -176,9 +177,12 @@ export const Marketplace = () => {
     }
   };
 
+  const clientLat = clientLocation?.latitude;
+  const clientLng = clientLocation?.longitude;
+
   useEffect(() => {
-    fetchServices();
-  }, [selectedTaskType, selectedCategory, selectedPricingUnit, searchQuery, clientLocation, maxDistanceKm]);
+    fetchServices(rawServices.length === 0);
+  }, [selectedTaskType, selectedCategory, selectedPricingUnit, clientLat, clientLng, maxDistanceKm]);
 
   // Smooth Client-Side Filtering & Haversine Distance Recommendation Engine using useMemo
   const processedServices = useMemo(() => {
@@ -194,14 +198,9 @@ export const Marketplace = () => {
         let pLat = fallbackCoords.latitude;
         let pLng = fallbackCoords.longitude;
 
-        if (service.location && typeof service.location.latitude === 'number' && typeof service.location.longitude === 'number') {
-          const rawLat = service.location.latitude;
-          const rawLng = service.location.longitude;
-          const devKm = calculateHaversineDistance(fallbackCoords.latitude, fallbackCoords.longitude, rawLat, rawLng);
-          if (devKm <= 30) {
-            pLat = rawLat;
-            pLng = rawLng;
-          }
+        if (service.location && typeof service.location.latitude === 'number' && typeof service.location.longitude === 'number' && service.location.latitude !== 0) {
+          pLat = service.location.latitude;
+          pLng = service.location.longitude;
         }
 
         let distKm = calculateHaversineDistance(cLat, cLng, pLat, pLng);
@@ -220,14 +219,22 @@ export const Marketplace = () => {
         if (onlyAvailable && service.status !== 'available') return false;
         if (maxPrice && service.priceInRupees > maxPrice) return false;
         
-        // If distance slider is set (e.g. 16 km), allow +5 km buffer; if service is in same district, keep in range
-        const effectiveMaxDistance = Number(maxDistanceKm) + 5;
-        const sDistrict = service.district || service.providerId?.district;
-        const isSameDistrict = sDistrict && selectedDistrict && sDistrict.toLowerCase() === selectedDistrict.toLowerCase();
-        
-        if (!isSameDistrict && effectiveMaxDistance && service.distanceKm > effectiveMaxDistance) {
-          return false;
+        // Instant Client-Side Search Query Filtering
+        if (searchQuery && searchQuery.trim() !== '') {
+          const q = searchQuery.toLowerCase().trim();
+          const titleMatch = service.title?.toLowerCase().includes(q);
+          const descMatch = service.description?.toLowerCase().includes(q);
+          const taskMatch = service.taskType?.toLowerCase().includes(q);
+          const distMatch = service.district?.toLowerCase().includes(q);
+          const villMatch = service.village?.toLowerCase().includes(q);
+          const provMatch = service.providerId?.name?.toLowerCase().includes(q);
+          if (!titleMatch && !descMatch && !taskMatch && !distMatch && !villMatch && !provMatch) {
+            return false;
+          }
         }
+
+        // Distance Recommendation: All available services are displayed and sorted by closest distance ASCENDING
+        // Distance slider (maxDistanceKm) controls prioritization banner while keeping all provider listings accessible
 
         // Category Tab Filtering
         if (selectedCategory !== 'all') {
@@ -249,7 +256,7 @@ export const Marketplace = () => {
       // Sort by distance ASCENDING (closest service providers recommended first!)
       .sort((a, b) => a.distanceKm - b.distanceKm);
 
-  }, [rawServices, clientLocation, selectedDistrict, maxPrice, maxDistanceKm, onlyAvailable, selectedCategory, selectedWorkforceType, selectedSpecialization]);
+  }, [rawServices, clientLocation, selectedDistrict, maxPrice, maxDistanceKm, onlyAvailable, selectedCategory, selectedWorkforceType, selectedSpecialization, searchQuery]);
 
   // Reset Filters
   const handleResetFilters = () => {
@@ -259,8 +266,8 @@ export const Marketplace = () => {
     setSelectedPricingUnit('all');
     setSelectedWorkforceType('all');
     setSelectedSpecialization('all');
-    setMaxPrice(5000);
-    setMaxDistanceKm(16);
+    setMaxPrice(50000);
+    setMaxDistanceKm(25);
     setOnlyAvailable(false);
     setGpsActive(false);
   };
@@ -361,53 +368,30 @@ export const Marketplace = () => {
   return (
     <div className="space-y-6">
       
-      {/* Header Banner */}
-      <div className="bg-gradient-to-br from-emerald-800 via-emerald-700 to-teal-900 rounded-3xl p-6 sm:p-8 text-white shadow-xl shadow-emerald-900/20 relative overflow-hidden">
-        <div className="relative z-10 space-y-3">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div className="inline-flex items-center space-x-2 bg-white/15 backdrop-blur-md px-3.5 py-1.5 rounded-full text-xs font-semibold text-emerald-100 border border-white/20">
-              <Tractor className="w-3.5 h-3.5 text-amber-300" />
-              <span>Smart Equipment Marketplace</span>
-            </div>
-
-            {/* GPS Live Location Trigger */}
+      {/* Standalone Clean Search Feature Bar (Light Cream Design) */}
+      <div className="relative max-w-full">
+        <div className="relative flex items-center">
+          <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+            <Search className="w-5 h-5 text-emerald-600" />
+          </div>
+          <input
+            type="text"
+            placeholder="Search tractor name, task (ploughing, harvesting), or village..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full pl-11 pr-12 py-3.5 bg-[#FAF8F5] text-slate-900 placeholder:text-slate-400 rounded-2xl text-sm sm:text-base font-semibold border border-slate-200/90 shadow-2xs focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all"
+            data-testid="marketplace-search-input"
+          />
+          {searchQuery && (
             <button
-              onClick={handleUseLiveGps}
-              className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all border ${
-                gpsActive
-                  ? 'bg-emerald-500 text-white border-emerald-400 shadow-sm'
-                  : 'bg-white/20 hover:bg-white/30 text-white border-white/30'
-              }`}
+              type="button"
+              onClick={() => setSearchQuery('')}
+              className="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-400 hover:text-slate-600"
+              title="Clear search"
             >
-              <Navigation className={`w-3.5 h-3.5 ${gpsActive ? 'animate-spin' : ''}`} />
-              <span>{gpsActive ? 'GPS Active' : 'Use Live GPS Location'}</span>
+              <X className="w-5 h-5" />
             </button>
-          </div>
-
-          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
-            Rent Machinery & Farm Services
-          </h1>
-
-          <p className="text-emerald-100 text-sm max-w-2xl flex items-center gap-1.5">
-            <Compass className="w-4 h-4 text-amber-300 shrink-0" />
-            <span>Client Location: <strong>{selectedDistrict}, {selectedState}</strong> ({clientLocation.latitude.toFixed(2)}° N, {clientLocation.longitude.toFixed(2)}° E)</span>
-          </p>
-
-          {/* Search Bar */}
-          <div className="pt-2 max-w-2xl">
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400">
-                <Search className="w-5 h-5 text-emerald-600" />
-              </div>
-              <input
-                type="text"
-                placeholder="Search tractor name, task (ploughing, harvesting), or village..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-11 pr-4 py-3.5 bg-white text-slate-900 placeholder:text-slate-400 rounded-2xl text-sm font-semibold shadow-lg focus:outline-hidden focus:ring-4 focus:ring-emerald-300 transition-all"
-              />
-            </div>
-          </div>
+          )}
         </div>
       </div>
 
@@ -536,16 +520,16 @@ export const Marketplace = () => {
             />
           </div>
 
-          {/* Haversine Distance Range Slider (16 KM Default with ±5 KM Buffer) */}
+          {/* Haversine Distance Range Slider (25 KM Default with 15 KM Buffer) */}
           <div>
             <div className="flex justify-between text-slate-500 mb-1">
               <span>Distance Range Radius</span>
-              <span className="font-bold text-teal-800">{maxDistanceKm} km (±5 km buffer: up to {maxDistanceKm + 5} km)</span>
+              <span className="font-bold text-teal-800">{maxDistanceKm} km (Up to {maxDistanceKm + 15} km coverage)</span>
             </div>
             <input
               type="range"
               min="1"
-              max="50"
+              max="100"
               step="1"
               value={maxDistanceKm}
               onChange={(e) => setMaxDistanceKm(Number(e.target.value))}

@@ -17,7 +17,7 @@ async function runScenario() {
       body: JSON.stringify({
         name: 'Srinivasulu (Renigunta Provider)',
         phone: providerPhone,
-        password: 'password123',
+        password: 'AgriPass#2026',
         role: 'provider',
         state: 'Andhra Pradesh',
         district: 'Tirupati',
@@ -106,7 +106,7 @@ async function runScenario() {
       body: JSON.stringify({
         name: 'Venkatesh (Puttur Farmer)',
         phone: farmerPhone,
-        password: 'password123',
+        password: 'AgriPass#2026',
         role: 'farmer',
         state: 'Andhra Pradesh',
         district: 'Tirupati',
@@ -238,11 +238,11 @@ async function runScenario() {
     // STEP 8: Admin Disburses Provider Earnings via UPI
     // ----------------------------------------------------
     console.log('--- STEP 8: Admin Earnings Payout Release ---');
-    // Login as Admin (9030585591 / admin@123)
+    // Login as Admin (9030585591 / AgriAdmin#2026)
     const adminLoginRes = await fetch(`${API_BASE}/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ phone: '9030585591', password: 'admin@123' })
+      body: JSON.stringify({ phone: '9030585591', password: 'AgriAdmin#2026' })
     });
     const adminLogin = await adminLoginRes.json();
     const adminToken = adminLogin.token;

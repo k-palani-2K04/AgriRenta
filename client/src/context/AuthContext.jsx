@@ -78,9 +78,6 @@ export const AuthProvider = ({ children }) => {
   // Load User profile on initial mount or token change
   useEffect(() => {
     const fetchMe = async () => {
-      // Always trigger live GPS location detection by default on app mount
-      detectLiveLocation();
-
       if (!token) {
         setLoading(false);
         return;

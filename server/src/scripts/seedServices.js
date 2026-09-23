@@ -13,7 +13,7 @@ const seedListings = async () => {
       provider = await User.create({
         name: 'Srinivas Rao',
         phone: '9876543211',
-        password: 'password123',
+        password: 'AgriPass#2026',
         role: 'provider',
         upiId: '7912889876@upi',
         state: 'Andhra Pradesh',

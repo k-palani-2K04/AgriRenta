@@ -1,33 +1,162 @@
 @import "tailwindcss";
 
+/* =========================================================================
+   BASE LAYER
+   ========================================================================= */
 @layer base {
   body {
     @apply bg-[#FAF8F5] text-slate-900;
   }
+  html {
+    scroll-behavior: smooth;
+  }
 }
 
+/* =========================================================================
+   COMPONENT LAYER
+   ========================================================================= */
 @layer components {
+  /* 48px minimum touch target for all interactive elements on mobile */
   .touch-action {
     min-height: 48px;
     @apply active:scale-95 transition-transform;
   }
+  /* Scrollbar-none cross-browser utility */
+  .scrollbar-none {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-none::-webkit-scrollbar {
+    display: none;
+  }
 }
 
+/* =========================================================================
+   SUNLIGHT HIGH-CONTRAST FIELD MODE
+   ========================================================================= */
 html.sunlight-mode {
   filter: contrast(1.28) saturate(1.2);
 }
-
 html.sunlight-mode body {
   background: #fffbeb !important;
   color: #111827 !important;
 }
-
 html.sunlight-mode .bg-white {
   background-color: #ffffff !important;
   border-color: #111827 !important;
 }
-
 html.sunlight-mode button,
 html.sunlight-mode a {
   font-weight: 800;
+}
+
+/* =========================================================================
+   MICRO-ANIMATION KEYFRAMES
+   ========================================================================= */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Animation utility classes */
+.animate-fade-in-up {
+  animation: fadeInUp 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.animate-slide-in-down {
+  animation: slideInDown 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.animate-fade-in {
+  animation: fadeIn 0.35s ease both;
+}
+.animate-scale-in {
+  animation: scaleIn 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Staggered delay helpers */
+.delay-75  { animation-delay: 75ms;  }
+.delay-150 { animation-delay: 150ms; }
+.delay-225 { animation-delay: 225ms; }
+.delay-300 { animation-delay: 300ms; }
+
+/* =========================================================================
+   MOBILE-FIRST RESPONSIVE OVERRIDES  (max-width: 640px)
+   ========================================================================= */
+@media (max-width: 640px) {
+  /* Hero card container */
+  .hero-container {
+    padding: 1rem;
+    border-radius: 1rem;
+  }
+
+  /* Hero headline fluid size */
+  .hero-title {
+    font-size: 1.875rem;   /* 30px */
+    line-height: 2.25rem;  /* 36px */
+  }
+
+  /* Search bar: stack vertically on small screens */
+  .search-bar-wrapper {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  /* Stats / trust indicators: 2-column grid */
+  .stats-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.75rem;
+  }
+
+  /* Service card images: fixed height fallback on very small screens */
+  .service-card-img {
+    height: 12rem;
+    width: 100%;
+    object-fit: cover;
+  }
+
+  /* GPS Navigation terminal: horizontal scroll on overflow, smaller font */
+  .navigation-terminal {
+    font-size: 0.75rem;   /* 12px */
+    overflow-x: auto;
+  }
+
+  /* Ensure all interactive controls meet 48px touch target */
+  select,
+  button,
+  input[type="text"],
+  input[type="search"] {
+    min-height: 48px;
+  }
 }

@@ -8,7 +8,7 @@ async function runTests() {
     const farmerLoginRes = await fetch(`${API_BASE}/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ phone: '9876543210', password: 'password123' })
+      body: JSON.stringify({ phone: '9876543210', password: 'AgriPass#2026' })
     });
     const farmerLogin = await farmerLoginRes.json();
     const farmerId = farmerLogin.user._id;
@@ -18,7 +18,7 @@ async function runTests() {
     const providerLoginRes = await fetch(`${API_BASE}/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ phone: '9876543211', password: 'password123' })
+      body: JSON.stringify({ phone: '9876543211', password: 'AgriPass#2026' })
     });
     const providerLogin = await providerLoginRes.json();
     const providerId = providerLogin.user._id;
