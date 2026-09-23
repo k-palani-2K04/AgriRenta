@@ -82,7 +82,7 @@ export const MyBookingsPage = () => {
       case 'confirmed':
         return <span className="bg-blue-100 text-blue-800 border border-blue-300 text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1">✅ Confirmed</span>;
       case 'en_route':
-        return <span className="bg-indigo-600 text-white text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1 animate-pulse">🚜 Machinery En Route</span>;
+        return <span className="bg-emerald-600 text-white text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1 animate-pulse">🚜 Machinery En Route</span>;
       case 'arrived':
         return <span className="bg-emerald-600 text-white text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1">📍 Arrived at Field</span>;
       case 'completed':
@@ -112,16 +112,16 @@ export const MyBookingsPage = () => {
       <ConfettiBurst active={confetti} onDone={() => setConfetti(false)} />
       
       {/* Banner */}
-      <div className="bg-gradient-to-br from-indigo-700 via-indigo-600 to-sky-700 rounded-3xl p-6 sm:p-8 text-white shadow-xl shadow-indigo-600/10 relative overflow-hidden">
+      <div className="bg-gradient-to-br from-emerald-800 via-emerald-700 to-teal-900 rounded-3xl p-6 sm:p-8 text-white shadow-xl shadow-emerald-900/20 relative overflow-hidden">
         <div className="relative z-10 space-y-2">
-          <div className="inline-flex items-center space-x-2 bg-white/15 backdrop-blur-md px-3.5 py-1.5 rounded-full text-xs font-semibold text-sky-100 border border-white/20">
+          <div className="inline-flex items-center space-x-2 bg-white/15 backdrop-blur-md px-3.5 py-1.5 rounded-full text-xs font-semibold text-emerald-100 border border-white/20">
             <Calendar className="w-3.5 h-3.5 text-amber-300" />
             <span>Farmer Rental Management</span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
             My Equipment Bookings
           </h1>
-          <p className="text-indigo-100 text-sm max-w-xl">
+          <p className="text-emerald-100 text-sm max-w-xl">
             Track live requests, monitor machinery approach, confirm field work completion, and review historical transactions.
           </p>
         </div>
@@ -133,8 +133,8 @@ export const MyBookingsPage = () => {
           onClick={() => setActiveTab('active')}
           className={`flex-1 py-3 px-4 rounded-xl text-xs sm:text-sm font-extrabold flex items-center justify-center space-x-2 transition-all ${
             activeTab === 'active'
-              ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/20'
-              : 'text-slate-600 hover:text-indigo-600 hover:bg-slate-50'
+              ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/20'
+              : 'text-slate-600 hover:text-emerald-600 hover:bg-slate-50'
           }`}
         >
           <ListFilter className="w-4 h-4" />
@@ -150,8 +150,8 @@ export const MyBookingsPage = () => {
           onClick={() => setActiveTab('history')}
           className={`flex-1 py-3 px-4 rounded-xl text-xs sm:text-sm font-extrabold flex items-center justify-center space-x-2 transition-all ${
             activeTab === 'history'
-              ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/20'
-              : 'text-slate-600 hover:text-indigo-600 hover:bg-slate-50'
+              ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/20'
+              : 'text-slate-600 hover:text-emerald-600 hover:bg-slate-50'
           }`}
         >
           <History className="w-4 h-4" />
@@ -169,7 +169,7 @@ export const MyBookingsPage = () => {
         <BookingListSkeleton />
       ) : currentDisplayList.length === 0 ? (
         <div className="bg-white rounded-3xl border border-slate-200/80 p-12 text-center space-y-3">
-          <div className="bg-indigo-50 text-indigo-600 p-4 rounded-full w-fit mx-auto">
+          <div className="bg-emerald-50 text-emerald-600 p-4 rounded-full w-fit mx-auto">
             {activeTab === 'active' ? <Tractor className="w-8 h-8" /> : <History className="w-8 h-8" />}
           </div>
           <h3 className="font-bold text-slate-800 text-base">
@@ -183,7 +183,7 @@ export const MyBookingsPage = () => {
           {activeTab === 'active' && (
             <button
               onClick={() => navigate('/rentals')}
-              className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-5 py-2.5 rounded-2xl text-xs shadow-sm transition-all"
+              className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-5 py-2.5 rounded-2xl text-xs shadow-sm transition-all"
             >
               Browse Marketplace
             </button>
@@ -207,7 +207,7 @@ export const MyBookingsPage = () => {
                 {/* Header Row */}
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
                   <div className="flex items-center space-x-3">
-                    <div className="bg-indigo-600 text-white p-3 rounded-2xl shadow-xs">
+                    <div className="bg-emerald-600 text-white p-3 rounded-2xl shadow-xs">
                       <Tractor className="w-6 h-6" />
                     </div>
                     <div>
@@ -237,7 +237,7 @@ export const MyBookingsPage = () => {
                     <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Service Provider & Contact</p>
                     <p className="font-bold text-slate-800 text-sm">{provider?.name || 'Equipment Owner'}</p>
                     <div className="flex items-center text-slate-600 font-medium">
-                      <MapPin className="w-3.5 h-3.5 text-indigo-600 mr-1 shrink-0" />
+                      <MapPin className="w-3.5 h-3.5 text-emerald-600 mr-1 shrink-0" />
                       <span>{b.providerLocation?.village || provider?.village || 'Village'}, {b.providerLocation?.district || provider?.district || 'District'}</span>
                     </div>
                     <a
@@ -254,14 +254,14 @@ export const MyBookingsPage = () => {
                     <div className="space-y-1.5">
                       <div className="flex items-center justify-between">
                         <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Financial Breakdown</p>
-                        <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-md bg-indigo-100 text-indigo-700">
+                        <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-800">
                           {b.paymentMethod ? b.paymentMethod.toUpperCase() : 'UPI QR'}
                         </span>
                       </div>
 
                       <div className="flex items-baseline justify-between">
                         <span className="text-xs text-slate-500 font-semibold">Total Service Fee:</span>
-                        <span className="text-lg font-black text-indigo-700">{formatRupees(totalVal)}</span>
+                        <span className="text-lg font-black text-emerald-800">{formatRupees(totalVal)}</span>
                       </div>
 
                       <div className="text-[11px] text-emerald-800 font-bold bg-emerald-50 border border-emerald-200 px-3 py-1.5 rounded-xl flex items-center justify-between">

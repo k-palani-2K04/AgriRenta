@@ -82,33 +82,40 @@ export const Navbar = ({ onToggleSidebar }) => {
   };
 
   return (
-    <header className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-slate-200/80 shadow-2xs">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
-          
-          {/* Left: Brand Logo & Sidebar Toggle */}
-          <div className="flex items-center space-x-3">
-            <button
-              onClick={onToggleSidebar}
-              className="p-2 rounded-xl text-slate-600 hover:bg-slate-100 focus:outline-hidden lg:hidden"
-              title="Toggle Menu"
-            >
-              <Menu className="w-6 h-6" />
-            </button>
-            <Link to="/" className="flex items-center space-x-2.5 group">
-              <div className="bg-indigo-600 text-white p-2.5 rounded-2xl group-hover:bg-indigo-700 transition-colors shadow-sm">
-                <Tractor className="w-5 h-5" />
-              </div>
-              <div className="flex flex-col">
-                <span className="font-extrabold text-xl text-slate-900 tracking-tight leading-none">
-                  {APP_CONFIG.primaryName}
-                </span>
-                <span className="text-[10px] text-slate-500 font-medium hidden sm:inline">
-                  {APP_CONFIG.tagline}
-                </span>
-              </div>
-            </Link>
-          </div>
+    <>
+      {/* Top Weather Ticker Bar (CropHelix Platform Style) */}
+      <div className="bg-[#FEF3C7] text-[#92400E] border-b border-[#FCD34D] px-4 py-1.5 text-xs font-bold text-center flex items-center justify-center space-x-2 shadow-2xs">
+        <span className="inline-block w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
+        <span>Local Weather Advisory: Sunny 28°C - Optimal Sowing Window Next 3 Days | Wind: 10 km/h NE</span>
+      </div>
+
+      <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-slate-200/80 shadow-2xs">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            
+            {/* Left: Brand Logo & Sidebar Toggle */}
+            <div className="flex items-center space-x-3">
+              <button
+                onClick={onToggleSidebar}
+                className="p-2 rounded-xl text-slate-600 hover:bg-slate-100 focus:outline-hidden lg:hidden"
+                title="Toggle Menu"
+              >
+                <Menu className="w-6 h-6" />
+              </button>
+              <Link to="/" className="flex items-center space-x-2.5 group" data-testid="navbar-logo">
+                <div className="bg-[#0F763E] text-white p-2.5 rounded-2xl group-hover:bg-[#1E6B35] transition-colors shadow-sm">
+                  <Tractor className="w-5 h-5" />
+                </div>
+                <div className="flex flex-col">
+                  <span className="font-extrabold text-xl text-slate-900 tracking-tight leading-none">
+                    {APP_CONFIG.primaryName}
+                  </span>
+                  <span className="text-[10px] text-slate-500 font-medium hidden sm:inline">
+                    {APP_CONFIG.tagline}
+                  </span>
+                </div>
+              </Link>
+            </div>
 
           {/* Center: Location Selector */}
           <div className="hidden md:flex items-center space-x-3">
@@ -118,8 +125,9 @@ export const Navbar = ({ onToggleSidebar }) => {
               <button
                 onClick={detectLiveLocation}
                 disabled={detectingLocation}
-                className="p-1 hover:bg-white rounded-lg transition-colors text-indigo-600 focus:outline-hidden"
+                className="p-1 hover:bg-white rounded-lg transition-colors text-emerald-600 focus:outline-hidden"
                 title="Detect My Live GPS Location (Reverse Geocode State & District)"
+                data-testid="nav-gps-btn"
               >
                 <Navigation className={`w-3.5 h-3.5 ${detectingLocation ? 'animate-spin' : ''}`} />
               </button>
@@ -127,6 +135,7 @@ export const Navbar = ({ onToggleSidebar }) => {
                 value={selectedState}
                 onChange={handleStateChange}
                 className="bg-transparent text-xs font-semibold text-slate-700 focus:outline-hidden cursor-pointer"
+                data-testid="nav-state-select"
               >
                 {Object.keys(STATES_AND_DISTRICTS).map((st) => (
                   <option key={st} value={st}>
@@ -139,6 +148,7 @@ export const Navbar = ({ onToggleSidebar }) => {
                 value={selectedDistrict}
                 onChange={(e) => setSelectedDistrict(e.target.value)}
                 className="bg-transparent text-xs font-semibold text-slate-700 focus:outline-hidden cursor-pointer max-w-[130px]"
+                data-testid="nav-district-select"
               >
                 {(STATES_AND_DISTRICTS[selectedState] || []).map((dist) => (
                   <option key={dist} value={dist}>
@@ -158,6 +168,7 @@ export const Navbar = ({ onToggleSidebar }) => {
                   onClick={() => setSunlight((v) => !v)}
                   className="touch-action min-w-12 px-2 rounded-xl text-slate-700 hover:bg-amber-50 border border-transparent hover:border-amber-200"
                   title="Sunlight high-contrast field view"
+                  data-testid="nav-sunlight-toggle"
                 >
                   {sunlight ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5 text-amber-500" />}
                 </button>
@@ -168,8 +179,9 @@ export const Navbar = ({ onToggleSidebar }) => {
                     if (!pushEnabled) enablePush();
                     markAllRead();
                   }}
-                  className="relative touch-action min-w-12 p-2 text-slate-600 hover:text-indigo-600 hover:bg-slate-100 rounded-xl"
+                  className="relative touch-action min-w-12 p-2 text-slate-600 hover:text-emerald-700 hover:bg-slate-100 rounded-xl"
                   title="Alerts"
+                  data-testid="nav-alerts-btn"
                 >
                   <Bell className="w-5 h-5" />
                   {unreadCount > 0 && (
@@ -185,6 +197,7 @@ export const Navbar = ({ onToggleSidebar }) => {
                     to="/admin/dashboard"
                     className="bg-slate-900 hover:bg-slate-800 text-amber-400 font-extrabold px-3 py-1.5 rounded-xl text-xs flex items-center space-x-1 shadow-xs border border-amber-400/30"
                     title="Access Admin Escrow Hub"
+                    data-testid="nav-admin-hub-link"
                   >
                     <ShieldCheck className="w-4 h-4 text-emerald-400" />
                     <span>Admin Escrow Hub</span>
@@ -194,8 +207,9 @@ export const Navbar = ({ onToggleSidebar }) => {
                 {user.role === 'provider' && (
                   <Link
                     to="/provider/requests"
-                    className="relative p-2 text-slate-600 hover:text-indigo-600 hover:bg-slate-100 rounded-xl transition-colors"
+                    className="relative p-2 text-slate-600 hover:text-emerald-700 hover:bg-slate-100 rounded-xl transition-colors"
                     title="Rental Requests"
+                    data-testid="nav-provider-requests-link"
                   >
                     <ClipboardList className="w-5 h-5" />
                     {pendingRequestsCount > 0 && (
@@ -206,9 +220,9 @@ export const Navbar = ({ onToggleSidebar }) => {
                   </Link>
                 )}
 
-                <div className="hidden sm:flex flex-col text-right">
+                <div className="hidden sm:flex flex-col text-right" data-testid="nav-user-info">
                   <span className="text-xs font-bold text-slate-800">{user.name}</span>
-                  <span className="text-[10px] capitalize px-2 py-0.5 rounded-full font-bold inline-block bg-indigo-50 text-indigo-700 border border-indigo-200/60 w-fit ml-auto">
+                  <span className="text-[10px] capitalize px-2 py-0.5 rounded-full font-bold inline-block bg-emerald-50 text-emerald-800 border border-emerald-200/60 w-fit ml-auto">
                     {user.role}
                   </span>
                 </div>
@@ -217,6 +231,7 @@ export const Navbar = ({ onToggleSidebar }) => {
                   onClick={handleLogout}
                   className="touch-action flex items-center space-x-1 bg-slate-100 hover:bg-rose-50 text-slate-700 hover:text-rose-700 border border-slate-200 hover:border-rose-200 px-3 rounded-xl text-xs font-semibold"
                   title="Logout"
+                  data-testid="nav-signout-btn"
                 >
                   <LogOut className="w-4 h-4" />
                   <span className="hidden sm:inline">Sign Out</span>
@@ -226,14 +241,16 @@ export const Navbar = ({ onToggleSidebar }) => {
               <div className="flex items-center space-x-2">
                 <Link
                   to="/login"
-                  className="flex items-center space-x-1 text-slate-700 hover:text-indigo-600 hover:bg-slate-100 px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors"
+                  className="flex items-center space-x-1 text-slate-700 hover:text-emerald-700 hover:bg-slate-100 px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors"
+                  data-testid="nav-login-btn"
                 >
                   <LogIn className="w-4 h-4" />
                   <span>Login</span>
                 </Link>
                 <Link
                   to="/register"
-                  className="flex items-center space-x-1 bg-indigo-600 hover:bg-indigo-700 text-white px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-colors shadow-xs"
+                  className="flex items-center space-x-1 bg-emerald-600 hover:bg-emerald-700 text-white px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-colors shadow-xs"
+                  data-testid="nav-register-btn"
                 >
                   <UserPlus className="w-4 h-4" />
                   <span>Register</span>
@@ -245,5 +262,6 @@ export const Navbar = ({ onToggleSidebar }) => {
         </div>
       </div>
     </header>
-  );
+  </>
+);
 };

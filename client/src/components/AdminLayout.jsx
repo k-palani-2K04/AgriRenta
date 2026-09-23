@@ -25,7 +25,7 @@ export const AdminLayout = () => {
             {/* Brand Logo & Portal Name */}
             <div className="flex items-center space-x-3">
               <Link to="/admin/dashboard" className="flex items-center space-x-2.5 group">
-                <div className="bg-indigo-600 text-white p-2 rounded-2xl group-hover:bg-indigo-500 transition-colors shadow-sm">
+                <div className="bg-emerald-600 text-white p-2 rounded-2xl group-hover:bg-emerald-500 transition-colors shadow-sm">
                   <ShieldCheck className="w-5 h-5 text-emerald-400" />
                 </div>
                 <div className="flex flex-col">

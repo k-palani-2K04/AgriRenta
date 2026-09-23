@@ -26,8 +26,10 @@ export const Login = () => {
       }
       if (userObj?.role === 'admin') {
         navigate('/admin/dashboard');
+      } else if (userObj?.role === 'provider') {
+        navigate('/provider/dashboard');
       } else {
-        navigate('/');
+        navigate('/marketplace');
       }
     } catch (err) {
       setError(err.response?.data?.message || 'Invalid credentials. Please try again.');
@@ -50,17 +52,17 @@ export const Login = () => {
         {/* Main Login Card */}
         <div className="bg-white rounded-3xl shadow-xl shadow-slate-200/60 border border-slate-200/80 overflow-hidden backdrop-blur-sm">
           
-          {/* Header Banner */}
+          {/* Header Banner - Emerald Agricultural Theme */}
           <div className={`p-8 text-white text-center relative overflow-hidden transition-colors duration-300 ${
             loginMode === 'admin' 
-              ? 'bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-800'
-              : 'bg-gradient-to-br from-indigo-700 via-indigo-600 to-sky-700'
+              ? 'bg-gradient-to-br from-slate-900 via-emerald-950 to-slate-800'
+              : 'bg-gradient-to-br from-emerald-800 via-emerald-700 to-teal-900'
           }`}>
             <div className="absolute -right-8 -bottom-8 opacity-10 pointer-events-none">
               <Tractor className="w-48 h-48 text-white" />
             </div>
 
-            <div className="inline-flex items-center space-x-2 bg-white/15 backdrop-blur-md px-3.5 py-1.5 rounded-full text-xs font-medium text-sky-100 border border-white/20 mb-4 shadow-sm">
+            <div className="inline-flex items-center space-x-2 bg-white/15 backdrop-blur-md px-3.5 py-1.5 rounded-full text-xs font-medium text-emerald-100 border border-white/20 mb-4 shadow-sm">
               <Sparkles className="w-3.5 h-3.5 text-amber-300" />
               <span>{loginMode === 'admin' ? 'Admin Escrow Portal' : `${APP_CONFIG.primaryName} Platform`}</span>
             </div>
@@ -68,7 +70,7 @@ export const Login = () => {
             <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
               {loginMode === 'admin' ? 'Admin Portal Sign In' : 'Welcome Back'}
             </h2>
-            <p className="text-indigo-100 text-xs mt-1 font-normal max-w-xs mx-auto">
+            <p className="text-emerald-100 text-xs mt-1 font-normal max-w-xs mx-auto">
               {loginMode === 'admin' 
                 ? 'Platform Owner portal for verifying client payments & releasing provider payouts'
                 : APP_CONFIG.tagline}
@@ -85,7 +87,7 @@ export const Login = () => {
               }}
               className={`py-2.5 rounded-2xl flex items-center justify-center space-x-1.5 transition-all ${
                 loginMode === 'user'
-                  ? 'bg-white text-indigo-700 shadow-sm'
+                  ? 'bg-white text-emerald-700 shadow-sm'
                   : 'text-slate-500 hover:text-slate-800'
               }`}
             >
@@ -107,7 +109,7 @@ export const Login = () => {
                   : 'text-slate-500 hover:text-slate-800'
               }`}
             >
-              <ShieldCheck className="w-4 h-4 text-emerald-400" />
+              <ShieldCheck className="w-4 h-4 text-amber-300" />
               <span>Admin Portal</span>
             </button>
           </div>
@@ -119,50 +121,50 @@ export const Login = () => {
             {loginMode === 'user' ? (
               <div className="bg-slate-50 border border-slate-200/80 p-3 rounded-2xl space-y-1.5">
                 <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1">
-                  <UserCheck className="w-3.5 h-3.5 text-indigo-600" /> Quick Demo Credentials
+                  <UserCheck className="w-3.5 h-3.5 text-emerald-600" /> Quick Demo Credentials
                 </span>
                 <div className="grid grid-cols-2 gap-2">
                   <button
                     type="button"
                     onClick={() => handleFillDemo('9876543210', 'password123', 'user')}
-                    className="bg-white hover:bg-indigo-50 border border-slate-200 text-indigo-900 py-1.5 px-2.5 rounded-xl text-xs font-semibold transition-all text-left flex items-center justify-between group shadow-2xs"
+                    className="bg-white hover:bg-emerald-50 border border-slate-200 text-emerald-950 py-1.5 px-2.5 rounded-xl text-xs font-semibold transition-all text-left flex items-center justify-between group shadow-2xs"
                   >
                     <div>
                       <div className="text-[11px] font-bold text-slate-800">Farmer Demo</div>
                       <div className="text-[10px] text-slate-400 font-mono">9876543210</div>
                     </div>
-                    <span className="text-[10px] bg-indigo-100 text-indigo-700 px-1.5 py-0.5 rounded-md font-bold">Fill</span>
+                    <span className="text-[10px] bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded-md font-bold">Fill</span>
                   </button>
 
                   <button
                     type="button"
                     onClick={() => handleFillDemo('9876543211', 'password123', 'user')}
-                    className="bg-white hover:bg-indigo-50 border border-slate-200 text-indigo-900 py-1.5 px-2.5 rounded-xl text-xs font-semibold transition-all text-left flex items-center justify-between group shadow-2xs"
+                    className="bg-white hover:bg-emerald-50 border border-slate-200 text-emerald-950 py-1.5 px-2.5 rounded-xl text-xs font-semibold transition-all text-left flex items-center justify-between group shadow-2xs"
                   >
                     <div>
                       <div className="text-[11px] font-bold text-slate-800">Provider Demo</div>
                       <div className="text-[10px] text-slate-400 font-mono">9876543211</div>
                     </div>
-                    <span className="text-[10px] bg-indigo-100 text-indigo-700 px-1.5 py-0.5 rounded-md font-bold">Fill</span>
+                    <span className="text-[10px] bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded-md font-bold">Fill</span>
                   </button>
                 </div>
               </div>
             ) : (
-              <div className="bg-indigo-50/70 border border-indigo-200 p-3 rounded-2xl space-y-1">
+              <div className="bg-emerald-50/70 border border-emerald-200 p-3 rounded-2xl space-y-1">
                 <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-bold text-indigo-900 uppercase tracking-wider flex items-center gap-1">
-                    <ShieldCheck className="w-3.5 h-3.5 text-indigo-600" /> Platform Owner Credentials
+                  <span className="text-[10px] font-bold text-emerald-900 uppercase tracking-wider flex items-center gap-1">
+                    <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" /> Platform Owner Credentials
                   </span>
                   <button
                     type="button"
                     onClick={() => handleFillDemo('9030585591', 'admin@123', 'admin')}
-                    className="text-[10px] bg-indigo-600 text-white px-3 rounded-md font-bold hover:bg-indigo-700 touch-action"
+                    className="text-[10px] bg-emerald-600 text-white px-3 py-1 rounded-md font-bold hover:bg-emerald-700 transition-colors"
                   >
                     Auto Fill Admin
                   </button>
                 </div>
-                <p className="text-[11px] text-indigo-800 font-medium">
-                  Admin Login Phone: <strong className="font-mono text-indigo-950">9030585591</strong> | Pass: <strong className="font-mono text-indigo-950">admin@123</strong>
+                <p className="text-[11px] text-emerald-800 font-medium">
+                  Admin Login Phone: <strong className="font-mono text-emerald-950">9030585591</strong> | Pass: <strong className="font-mono text-emerald-950">admin@123</strong>
                 </p>
               </div>
             )}
@@ -189,7 +191,8 @@ export const Login = () => {
                     placeholder="Enter registered 10-digit number"
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
-                    className="w-full pl-10 pr-3.5 py-3 bg-slate-50/80 border border-slate-200 rounded-2xl text-sm text-slate-900 placeholder:text-slate-400 focus:outline-hidden focus:border-indigo-600 focus:bg-white focus:ring-3 focus:ring-indigo-100 transition-all font-medium"
+                    className="w-full pl-10 pr-3.5 py-3 bg-slate-50/80 border border-slate-200 rounded-2xl text-sm text-slate-900 placeholder:text-slate-400 focus:outline-hidden focus:border-emerald-600 focus:bg-white focus:ring-3 focus:ring-emerald-100 transition-all font-medium"
+                    data-testid="login-phone-input"
                   />
                 </div>
               </div>
@@ -208,7 +211,8 @@ export const Login = () => {
                     placeholder="••••••••"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full pl-10 pr-3.5 py-3 bg-slate-50/80 border border-slate-200 rounded-2xl text-sm text-slate-900 placeholder:text-slate-400 focus:outline-hidden focus:border-indigo-600 focus:bg-white focus:ring-3 focus:ring-indigo-100 transition-all font-medium"
+                    className="w-full pl-10 pr-3.5 py-3 bg-slate-50/80 border border-slate-200 rounded-2xl text-sm text-slate-900 placeholder:text-slate-400 focus:outline-hidden focus:border-emerald-600 focus:bg-white focus:ring-3 focus:ring-emerald-100 transition-all font-medium"
+                    data-testid="login-password-input"
                   />
                 </div>
               </div>
@@ -219,8 +223,9 @@ export const Login = () => {
                 className={`w-full text-white font-extrabold py-3.5 px-4 rounded-2xl text-sm shadow-lg transition-all flex items-center justify-center space-x-2 disabled:opacity-50 mt-2 ${
                   loginMode === 'admin'
                     ? 'bg-slate-900 hover:bg-slate-800 shadow-slate-900/20'
-                    : 'bg-indigo-600 hover:bg-indigo-700 shadow-indigo-600/20'
+                    : 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-600/20'
                 }`}
+                data-testid="login-submit-btn"
               >
                 {submitting ? (
                   <span>Authenticating...</span>
@@ -235,7 +240,7 @@ export const Login = () => {
 
             <div className="pt-2 text-center text-xs text-slate-500">
               New to {APP_CONFIG.primaryName}?{' '}
-              <Link to="/register" className="font-bold text-indigo-600 hover:text-indigo-700 hover:underline">
+              <Link to="/register" className="font-bold text-emerald-600 hover:text-emerald-700 hover:underline">
                 Create an account
               </Link>
             </div>

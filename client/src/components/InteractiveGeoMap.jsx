@@ -413,7 +413,7 @@ export const InteractiveGeoMap = ({
             className={`font-bold px-4 py-2.5 rounded-2xl text-xs shadow-xl flex items-center space-x-2 transition-all ${
               isSimulating
                 ? 'bg-amber-500 hover:bg-amber-600 text-white'
-                : 'bg-indigo-600 hover:bg-indigo-700 text-white'
+                : 'bg-emerald-600 hover:bg-emerald-700 text-white'
             }`}
           >
             {isSimulating ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
@@ -425,7 +425,7 @@ export const InteractiveGeoMap = ({
             className="bg-white text-slate-800 p-3 rounded-full shadow-xl border border-slate-200 transition-all hover:scale-110 self-end"
             title="Recenter Map"
           >
-            <Target className="w-5 h-5 text-indigo-600" />
+            <Target className="w-5 h-5 text-emerald-600" />
           </button>
         </div>
 
@@ -479,7 +479,7 @@ export const InteractiveGeoMap = ({
           <Marker position={animatedProviderPos} icon={providerZomatoIcon}>
             <Popup className="rounded-2xl">
               <div className="p-2 space-y-2 text-xs">
-                <div className="flex items-center space-x-1 text-indigo-700 font-bold">
+                <div className="flex items-center space-x-1 text-emerald-800 font-bold">
                   <Tractor className="w-4 h-4" />
                   <span>Service Provider Machinery</span>
                 </div>
@@ -548,7 +548,7 @@ export const InteractiveGeoMap = ({
             href={gmapUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex-1 sm:flex-initial bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-3 rounded-2xl text-xs font-extrabold shadow-md flex items-center justify-center space-x-1.5 transition-transform hover:scale-102"
+            className="flex-1 sm:flex-initial bg-emerald-700 hover:bg-emerald-800 text-white px-5 py-3 rounded-2xl text-xs font-extrabold shadow-md flex items-center justify-center space-x-1.5 transition-transform hover:scale-102"
           >
             <Navigation className="w-4 h-4" />
             <span>Google Maps 🧭</span>

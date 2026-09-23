@@ -162,7 +162,7 @@ export const BookingModal = ({
       <div className="bg-white rounded-3xl shadow-2xl max-w-lg w-full overflow-hidden border border-slate-200 flex flex-col max-h-[90vh]">
         
         {/* Modal Header */}
-        <div className="bg-gradient-to-r from-indigo-700 to-sky-700 px-5 py-4 text-white flex items-center justify-between shrink-0">
+        <div className="bg-gradient-to-r from-emerald-800 via-emerald-700 to-teal-900 px-5 py-4 text-white flex items-center justify-between shrink-0">
           <div className="flex items-center space-x-2">
             {isWorkforceService ? <User className="w-5 h-5 text-amber-300" /> : <Tractor className="w-5 h-5 text-amber-300" />}
             <h3 className="font-bold text-base">Service Booking & Payment Checkout</h3>
@@ -197,7 +197,7 @@ export const BookingModal = ({
               {/* Gateway Banner */}
               <div className="bg-slate-50 border border-slate-200 p-3 rounded-2xl space-y-1">
                 <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-md bg-indigo-100 text-indigo-700">
+                  <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-800">
                     🛡️ Admin Dynamic UPI Escrow Gateway
                   </span>
                   <span className="text-xs font-black text-emerald-700">
@@ -211,21 +211,21 @@ export const BookingModal = ({
               </div>
 
               {/* Revenue Breakdown */}
-              <div className="bg-indigo-50/70 border border-indigo-100 p-3 rounded-2xl text-xs space-y-1.5">
+              <div className="bg-emerald-50/70 border border-emerald-100 p-3 rounded-2xl text-xs space-y-1.5">
                 <div className="flex items-center justify-between">
                   <span className="text-slate-600 font-medium">Total Rental Service Cost:</span>
                   <span className="font-extrabold text-slate-900">{formatRupees(totalCost)}</span>
                 </div>
-                <div className="flex items-center justify-between font-bold text-emerald-800 pt-1 border-t border-indigo-200/60">
+                <div className="flex items-center justify-between font-bold text-emerald-800 pt-1 border-t border-emerald-200/60">
                   <span>Required 20% Advance Payable Now:</span>
                   <span className="text-xs font-black">{formatRupees(advanceAmount)}</span>
                 </div>
-                <div className="grid grid-cols-2 gap-2 pt-1 border-t border-indigo-200/60 text-[10px]">
-                  <div className="bg-white p-1.5 rounded-xl border border-indigo-100">
+                <div className="grid grid-cols-2 gap-2 pt-1 border-t border-emerald-200/60 text-[10px]">
+                  <div className="bg-white p-1.5 rounded-xl border border-emerald-100">
                     <span className="text-slate-400 font-medium block">Admin Commission ({isWorkforceService ? '0%' : '5%'}):</span>
-                    <span className="font-bold text-indigo-700">{formatRupees(adminCommission)} {isWorkforceService ? '(0% Fee)' : ''}</span>
+                    <span className="font-bold text-emerald-800">{formatRupees(adminCommission)} {isWorkforceService ? '(0% Fee)' : ''}</span>
                   </div>
-                  <div className="bg-white p-1.5 rounded-xl border border-indigo-100">
+                  <div className="bg-white p-1.5 rounded-xl border border-emerald-100">
                     <span className="text-slate-400 font-medium block">Worker Payout ({isWorkforceService ? '100% Advance' : '15% Escrow'}):</span>
                     <span className="font-bold text-emerald-700">{formatRupees(providerDisbursement)}</span>
                   </div>
@@ -253,7 +253,7 @@ export const BookingModal = ({
               </div>
 
               {/* Dynamic QR Display */}
-              <div className="bg-gradient-to-br from-indigo-50/50 to-sky-50/50 border border-indigo-100 p-4 rounded-2xl text-center space-y-2.5">
+              <div className="bg-gradient-to-br from-emerald-50/50 to-teal-50/50 border border-emerald-100 p-4 rounded-2xl text-center space-y-2.5">
                 <div className="flex items-center justify-center">
                   <div className="bg-white p-3 rounded-2xl shadow-xs border border-slate-200">
                     <img
@@ -270,7 +270,7 @@ export const BookingModal = ({
                 <div className="space-y-0.5">
                   <p className="text-[11px] text-slate-500 font-medium">Verified Admin Escrow Payee:</p>
                   <div className="flex items-center justify-center space-x-2 bg-white px-3 py-1 rounded-xl border border-slate-200 w-fit mx-auto shadow-2xs">
-                    <span className="font-mono text-[11px] font-black text-indigo-900">{payeeName} ({adminUpiId})</span>
+                    <span className="font-mono text-[11px] font-black text-emerald-950">{payeeName} ({adminUpiId})</span>
                   </div>
                 </div>
 
@@ -278,7 +278,7 @@ export const BookingModal = ({
                   href={upiDeepLink}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center justify-center space-x-2 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold px-4 rounded-2xl text-xs shadow-xs w-full mt-1 touch-action"
+                  className="inline-flex items-center justify-center space-x-2 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold px-4 rounded-2xl text-xs shadow-xs w-full mt-1 touch-action"
                 >
                   <Wallet className="w-4 h-4 text-amber-300" />
                   <span>Pay ₹{advanceAmount} via GPay / PhonePe / Paytm App 📱</span>
@@ -295,7 +295,7 @@ export const BookingModal = ({
                   placeholder="e.g. 324156789012"
                   value={transactionRef}
                   onChange={(e) => setTransactionRef(e.target.value)}
-                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono focus:outline-hidden focus:border-indigo-600"
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono focus:outline-hidden focus:border-emerald-600"
                 />
               </div>
 
@@ -323,7 +323,7 @@ export const BookingModal = ({
                 <button
                   type="button"
                   onClick={() => setBookingStep('details')}
-                  className="w-full text-[11px] font-bold text-indigo-600 hover:underline pt-0.5"
+                  className="w-full text-[11px] font-bold text-emerald-700 hover:underline pt-0.5"
                 >
                   ← Back to Service & Date Details
                 </button>
@@ -337,7 +337,7 @@ export const BookingModal = ({
               <div className="bg-slate-50 border border-slate-200 p-4 rounded-2xl space-y-1">
                 <div className="flex items-center justify-between">
                   <span className={`text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-md ${
-                    isWorkforceService ? 'bg-emerald-100 text-emerald-800' : 'bg-indigo-100 text-indigo-700'
+                    isWorkforceService ? 'bg-emerald-100 text-emerald-800' : 'bg-emerald-100 text-emerald-800'
                   }`}>
                     {isWorkforceService ? '👨‍🌾 Agricultural Skilled Workforce (0% Fee)' : '🚜 Machinery & Farm Equipment'}
                   </span>
@@ -361,7 +361,8 @@ export const BookingModal = ({
                   required
                   value={bookingDate}
                   onChange={(e) => setBookingDate(e.target.value)}
-                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-semibold focus:outline-hidden focus:border-indigo-600"
+                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-semibold focus:outline-hidden focus:border-emerald-600"
+                  data-testid="booking-modal-date"
                 />
 
                 {weatherAlert.loading ? (
@@ -392,7 +393,7 @@ export const BookingModal = ({
                 <label className="block text-xs font-bold text-slate-700 mb-1">
                   Work Estimator (Number of {unitLabel})
                 </label>
-                <div className="flex rounded-2xl border border-slate-200 overflow-hidden bg-slate-50 focus-within:border-indigo-600 focus-within:ring-2 focus-within:ring-indigo-100">
+                <div className="flex rounded-2xl border border-slate-200 overflow-hidden bg-slate-50 focus-within:border-emerald-600 focus-within:ring-2 focus-within:ring-emerald-100">
                   <input
                     type="number"
                     min="1"
@@ -401,6 +402,7 @@ export const BookingModal = ({
                     value={acresOrHours}
                     onChange={(e) => setAcresOrHours(Math.max(1, Number(e.target.value)))}
                     className="w-full px-3.5 py-2.5 bg-transparent text-sm font-bold text-slate-900 focus:outline-hidden [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    data-testid="booking-modal-acres-input"
                   />
                   <span className="px-4 py-2.5 text-xs font-extrabold text-slate-600 bg-slate-100 border-l border-slate-200 flex items-center shrink-0">
                     {unitLabel}
@@ -409,7 +411,7 @@ export const BookingModal = ({
               </div>
 
               {/* Pricing & 20% Advance Calculation Card */}
-              <div className="bg-gradient-to-br from-indigo-50 to-sky-50 border border-indigo-100 p-4 rounded-2xl space-y-2">
+              <div className="bg-gradient-to-br from-emerald-50 to-teal-50 border border-emerald-100 p-4 rounded-2xl space-y-2">
                 <div className="flex items-center justify-between text-xs text-slate-600 font-medium">
                   <span>Total Rental Fee:</span>
                   <span className="font-bold text-slate-900">{formatRupees(totalCost)}</span>
@@ -437,9 +439,10 @@ export const BookingModal = ({
                     onClick={() => setPaymentMethod('upi')}
                     className={`p-3 rounded-2xl border text-center text-xs font-bold transition-all flex flex-col items-center justify-center gap-1 ${
                       paymentMethod === 'upi'
-                        ? 'bg-indigo-600 text-white border-indigo-600 shadow-md shadow-indigo-600/20'
+                        ? 'bg-emerald-600 text-white border-emerald-600 shadow-md shadow-emerald-600/20'
                         : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
                     }`}
+                    data-testid="payment-method-upi"
                   >
                     <Wallet className="w-4 h-4" />
                     <span>UPI / GPay</span>
@@ -450,9 +453,10 @@ export const BookingModal = ({
                     onClick={() => setPaymentMethod('razorpay')}
                     className={`p-3 rounded-2xl border text-center text-xs font-bold transition-all flex flex-col items-center justify-center gap-1 ${
                       paymentMethod === 'razorpay'
-                        ? 'bg-indigo-600 text-white border-indigo-600 shadow-md shadow-indigo-600/20'
+                        ? 'bg-emerald-600 text-white border-emerald-600 shadow-md shadow-emerald-600/20'
                         : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
                     }`}
+                    data-testid="payment-method-razorpay"
                   >
                     <CreditCard className="w-4 h-4" />
                     <span>Razorpay</span>
@@ -463,9 +467,10 @@ export const BookingModal = ({
                     onClick={() => setPaymentMethod('cod')}
                     className={`p-3 rounded-2xl border text-center text-xs font-bold transition-all flex flex-col items-center justify-center gap-1 ${
                       paymentMethod === 'cod'
-                        ? 'bg-indigo-600 text-white border-indigo-600 shadow-md shadow-indigo-600/20'
+                        ? 'bg-emerald-600 text-white border-emerald-600 shadow-md shadow-emerald-600/20'
                         : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
                     }`}
+                    data-testid="payment-method-cod"
                   >
                     <Banknote className="w-4 h-4" />
                     <span>COD Cash</span>
@@ -485,7 +490,8 @@ export const BookingModal = ({
                 <button
                   type="submit"
                   disabled={submittingBooking}
-                  className="bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold px-5 rounded-2xl text-xs shadow-md shadow-indigo-600/20 disabled:opacity-50 flex items-center space-x-1.5 touch-action"
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold px-5 rounded-2xl text-xs shadow-md shadow-emerald-600/20 disabled:opacity-50 flex items-center space-x-1.5 touch-action"
+                  data-testid="booking-modal-submit-btn"
                 >
                   <span>{paymentMethod === 'cod' ? 'Confirm Booking (Cash / Pending)' : `Proceed to Pay 20% Advance (${formatRupees(advanceAmount)}) →`}</span>
                 </button>

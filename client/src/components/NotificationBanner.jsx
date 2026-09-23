@@ -31,7 +31,7 @@ export const NotificationBanner = () => {
     ? 'from-emerald-600 to-teal-700'
     : banner.type === 'refunded'
       ? 'from-rose-600 to-rose-700'
-      : 'from-indigo-700 to-sky-700';
+      : 'from-emerald-800 to-teal-900';
 
   return (
     <div className={`rounded-2xl bg-gradient-to-r ${tone} text-white p-4 shadow-lg mb-4 flex items-start gap-3`}>

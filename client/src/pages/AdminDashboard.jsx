@@ -165,9 +165,9 @@ export const AdminDashboard = () => {
     <div className="space-y-6 pb-12">
       
       {/* Header Banner */}
-      <div className="bg-gradient-to-br from-slate-900 via-indigo-950 to-indigo-900 rounded-3xl p-6 sm:p-8 text-white shadow-xl relative overflow-hidden">
+      <div className="bg-gradient-to-br from-slate-900 via-emerald-950 to-teal-900 rounded-3xl p-6 sm:p-8 text-white shadow-xl relative overflow-hidden">
         <div className="relative z-10 space-y-3">
-          <div className="inline-flex items-center space-x-2 bg-white/10 backdrop-blur-md px-3.5 py-1.5 rounded-full text-xs font-semibold text-sky-200 border border-white/20">
+          <div className="inline-flex items-center space-x-2 bg-white/10 backdrop-blur-md px-3.5 py-1.5 rounded-full text-xs font-semibold text-emerald-200 border border-white/20">
             <ShieldCheck className="w-4 h-4 text-emerald-400" />
             <span>Platform Owner & Admin Escrow Hub</span>
           </div>
@@ -177,7 +177,7 @@ export const AdminDashboard = () => {
               <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
                 Admin Escrow & Provider Payout Dashboard
               </h1>
-              <p className="text-indigo-200 text-xs sm:text-sm mt-1 max-w-xl">
+              <p className="text-emerald-200 text-xs sm:text-sm mt-1 max-w-xl">
                 20% Advance payments collected via Admin UPI (<span className="font-mono text-amber-300 font-bold">9030585591@ybl</span>) are held until service seekers confirm job completion.
               </p>
             </div>
@@ -185,7 +185,7 @@ export const AdminDashboard = () => {
             <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto">
               <button
                 onClick={fetchAdminData}
-                className="bg-indigo-600 hover:bg-indigo-500 text-white font-bold px-3.5 py-2 rounded-2xl text-xs shadow-sm"
+                className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-3.5 py-2 rounded-2xl text-xs shadow-sm"
               >
                 Refresh 🔄
               </button>
@@ -229,10 +229,10 @@ export const AdminDashboard = () => {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         
         {/* Total Admin Escrow Collected (20%) */}
-        <div className="bg-white rounded-3xl border border-slate-200/80 p-5 shadow-2xs space-y-2">
+        <div className="bg-white rounded-3xl border border-slate-200/80 p-5 shadow-2xs space-y-2" data-testid="admin-kpi-escrow">
           <div className="flex items-center justify-between">
             <span className="text-[11px] font-bold text-slate-500">Total Advance (20%)</span>
-            <div className="bg-indigo-100 text-indigo-700 p-2 rounded-xl">
+            <div className="bg-emerald-100 text-emerald-800 p-2 rounded-xl">
               <Wallet className="w-4 h-4" />
             </div>
           </div>
@@ -241,19 +241,19 @@ export const AdminDashboard = () => {
         </div>
 
         {/* Admin Platform Commission (5%) */}
-        <div className="bg-white rounded-3xl border border-indigo-200 p-5 shadow-2xs space-y-2 bg-gradient-to-br from-indigo-50/40 to-sky-50/40">
+        <div className="bg-white rounded-3xl border border-emerald-200 p-5 shadow-2xs space-y-2 bg-gradient-to-br from-emerald-50/40 to-teal-50/40" data-testid="admin-kpi-commission">
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold text-indigo-900">Admin Commission (5%)</span>
-            <div className="bg-indigo-600 text-white p-2 rounded-xl">
+            <span className="text-[11px] font-bold text-emerald-900">Admin Commission (5%)</span>
+            <div className="bg-emerald-600 text-white p-2 rounded-xl">
               <DollarSign className="w-4 h-4" />
             </div>
           </div>
-          <p className="text-xl font-black text-indigo-700">{formatRupees(stats.totalAdminCommission || Math.round((stats.totalEscrowCollected || 0) * 0.25))}</p>
-          <p className="text-[10px] text-indigo-600/80 font-bold">Retained Revenue (25% of Advance)</p>
+          <p className="text-xl font-black text-emerald-700">{formatRupees(stats.totalAdminCommission || Math.round((stats.totalEscrowCollected || 0) * 0.25))}</p>
+          <p className="text-[10px] text-emerald-700/80 font-bold">Retained Revenue (25% of Advance)</p>
         </div>
 
         {/* Released Payouts (15%) */}
-        <div className="bg-white rounded-3xl border border-slate-200/80 p-5 shadow-2xs space-y-2">
+        <div className="bg-white rounded-3xl border border-slate-200/80 p-5 shadow-2xs space-y-2" data-testid="admin-kpi-released">
           <div className="flex items-center justify-between">
             <span className="text-[11px] font-bold text-slate-500">Released Payouts (15%)</span>
             <div className="bg-emerald-100 text-emerald-700 p-2 rounded-xl">
@@ -265,7 +265,7 @@ export const AdminDashboard = () => {
         </div>
 
         {/* Pending Payouts */}
-        <div className="bg-white rounded-3xl border border-slate-200/80 p-5 shadow-2xs space-y-2">
+        <div className="bg-white rounded-3xl border border-slate-200/80 p-5 shadow-2xs space-y-2" data-testid="admin-kpi-pending">
           <div className="flex items-center justify-between">
             <span className="text-[11px] font-bold text-slate-500">Pending Disbursement</span>
             <div className="bg-amber-100 text-amber-700 p-2 rounded-xl">
@@ -277,7 +277,7 @@ export const AdminDashboard = () => {
         </div>
 
         {/* Platform Ecosystem */}
-        <div className="bg-white rounded-3xl border border-slate-200/80 p-5 shadow-2xs space-y-2">
+        <div className="bg-white rounded-3xl border border-slate-200/80 p-5 shadow-2xs space-y-2" data-testid="admin-kpi-scale">
           <div className="flex items-center justify-between">
             <span className="text-[11px] font-bold text-slate-500">Platform Scale</span>
             <div className="bg-sky-100 text-sky-700 p-2 rounded-xl">
@@ -300,7 +300,8 @@ export const AdminDashboard = () => {
               placeholder="Search provider, farmer, or UPI handle..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-2xl text-xs font-medium focus:outline-hidden focus:border-indigo-600"
+              className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-2xl text-xs font-medium focus:outline-hidden focus:border-emerald-600"
+              data-testid="admin-search-input"
             />
           </div>
 
@@ -309,9 +310,10 @@ export const AdminDashboard = () => {
               onClick={() => setFilterStatus('all')}
               className={`px-3.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
                 filterStatus === 'all'
-                  ? 'bg-indigo-600 text-white shadow-xs'
+                  ? 'bg-emerald-600 text-white shadow-xs'
                   : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
               }`}
+              data-testid="admin-filter-all"
             >
               All Services ({bookings.length})
             </button>
@@ -323,6 +325,7 @@ export const AdminDashboard = () => {
                   ? 'bg-emerald-600 text-white shadow-xs'
                   : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
               }`}
+              data-testid="admin-filter-confirmed"
             >
               Confirmed by Farmer ✓
             </button>
@@ -355,7 +358,7 @@ export const AdminDashboard = () => {
       {/* Bookings & Provider Payout Table */}
       {loading ? (
         <div className="py-16 text-center text-slate-500">
-          <div className="w-8 h-8 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
+          <div className="w-8 h-8 border-4 border-emerald-600 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
           <p className="text-xs font-semibold">Loading platform service states...</p>
         </div>
       ) : filteredBookings.length === 0 ? (
@@ -396,7 +399,7 @@ export const AdminDashboard = () => {
                         <p className="text-[11px] text-slate-500">
                           Provider: <strong>{provider?.name || 'Provider'}</strong> ({provider?.phone || '9876543211'})
                         </p>
-                        <div className="flex items-center space-x-1 bg-indigo-50 border border-indigo-100 px-2 py-0.5 rounded-md w-fit text-[10px] font-mono font-bold text-indigo-700">
+                        <div className="flex items-center space-x-1 bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded-md w-fit text-[10px] font-mono font-bold text-emerald-800">
                           <span>UPI: {providerUpi}</span>
                         </div>
                       </td>
@@ -474,7 +477,7 @@ export const AdminDashboard = () => {
                                 className={`touch-action px-3 rounded-xl text-xs font-bold shadow-xs flex items-center space-x-1 ${
                                   b.jobCompletedByFarmer
                                     ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-600/20'
-                                    : 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-indigo-600/20'
+                                    : 'bg-emerald-700 hover:bg-emerald-800 text-white shadow-emerald-700/20'
                                 }`}
                               >
                                 <Send className="w-3.5 h-3.5" />
@@ -507,7 +510,7 @@ export const AdminDashboard = () => {
           <div className="bg-white rounded-3xl shadow-2xl max-w-md w-full overflow-hidden border border-slate-200">
             
             {/* Header */}
-            <div className="bg-gradient-to-r from-indigo-800 to-slate-900 p-5 text-white flex items-center justify-between">
+            <div className="bg-gradient-to-r from-emerald-900 to-slate-900 p-5 text-white flex items-center justify-between">
               <div className="flex items-center space-x-2">
                 <Send className="w-5 h-5 text-amber-300" />
                 <h3 className="font-bold text-base">Release Provider Payout via UPI</h3>
@@ -536,16 +539,16 @@ export const AdminDashboard = () => {
 
                 return (
                   <>
-                    <div className="bg-indigo-50 border border-indigo-100 p-4 rounded-2xl space-y-2 text-xs">
+                    <div className="bg-emerald-50 border border-emerald-100 p-4 rounded-2xl space-y-2 text-xs">
                       <div className="flex items-center justify-between">
                         <span className="font-bold text-slate-600">Equipment Provider:</span>
                         <span className="font-black text-slate-900">{selectedBookingForPayout.providerId?.name || 'Provider'}</span>
                       </div>
                       <div className="flex items-center justify-between">
                         <span className="font-bold text-slate-600">Registered Provider UPI VPA:</span>
-                        <span className="font-mono font-black text-indigo-700">{pUpi}</span>
+                        <span className="font-mono font-black text-emerald-800">{pUpi}</span>
                       </div>
-                      <div className="pt-2 border-t border-indigo-200/60 space-y-1">
+                      <div className="pt-2 border-t border-emerald-200/60 space-y-1">
                         <div className="flex items-center justify-between text-[11px]">
                           <span className="text-slate-500">Total Booking Cost:</span>
                           <span className="font-bold text-slate-800">{formatRupees(tot)}</span>
@@ -555,10 +558,10 @@ export const AdminDashboard = () => {
                           <span className="font-bold text-slate-800">{formatRupees(adv)}</span>
                         </div>
                         <div className="flex items-center justify-between text-[11px]">
-                          <span className="text-indigo-600 font-bold">Admin Platform Commission (5%):</span>
-                          <span className="font-bold text-indigo-700">{formatRupees(comm)}</span>
+                          <span className="text-emerald-700 font-bold">Admin Platform Commission (5%):</span>
+                          <span className="font-bold text-emerald-800">{formatRupees(comm)}</span>
                         </div>
-                        <div className="flex items-center justify-between pt-1 border-t border-indigo-200/60 font-bold text-emerald-800">
+                        <div className="flex items-center justify-between pt-1 border-t border-emerald-200/60 font-bold text-emerald-800">
                           <span>Provider Disbursement Payout (15%):</span>
                           <span className="font-black text-emerald-700 text-base">{formatRupees(provPayout)}</span>
                         </div>
@@ -573,7 +576,7 @@ export const AdminDashboard = () => {
                         href={pLink}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex items-center space-x-1 text-xs font-bold text-indigo-600 hover:underline"
+                        className="inline-flex items-center space-x-1 text-xs font-bold text-emerald-700 hover:underline"
                       >
                         <span>Pay ₹{provPayout} to Provider UPI ({pUpi}) 📲</span>
                       </a>
@@ -592,7 +595,7 @@ export const AdminDashboard = () => {
                   required
                   value={payoutTxnRef}
                   onChange={(e) => setPayoutTxnRef(e.target.value)}
-                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-2xl text-xs font-mono font-bold focus:outline-hidden focus:border-indigo-600"
+                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-2xl text-xs font-mono font-bold focus:outline-hidden focus:border-emerald-600"
                 />
               </div>
 

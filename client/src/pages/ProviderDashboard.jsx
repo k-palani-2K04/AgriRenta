@@ -386,18 +386,18 @@ export const ProviderDashboard = () => {
     <div className="space-y-6">
       
       {/* Top Banner & Earnings Overview */}
-      <div className="bg-gradient-to-br from-indigo-700 via-indigo-600 to-sky-700 rounded-3xl p-6 sm:p-8 text-white shadow-xl shadow-indigo-600/10 relative overflow-hidden">
+      <div className="bg-gradient-to-br from-emerald-800 via-emerald-700 to-teal-900 rounded-3xl p-6 sm:p-8 text-white shadow-xl shadow-emerald-900/20 relative overflow-hidden">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
           
           <div className="space-y-2">
-            <div className="inline-flex items-center space-x-2 bg-white/15 backdrop-blur-md px-3.5 py-1.5 rounded-full text-xs font-semibold text-sky-100 border border-white/20">
+            <div className="inline-flex items-center space-x-2 bg-white/15 backdrop-blur-md px-3.5 py-1.5 rounded-full text-xs font-semibold text-emerald-100 border border-white/20">
               <ShieldCheck className="w-3.5 h-3.5 text-amber-300" />
               <span>Provider Control Center</span>
             </div>
             <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
               Provider Dashboard
             </h1>
-            <p className="text-indigo-100 text-sm max-w-xl flex items-center gap-1.5">
+            <p className="text-emerald-100 text-sm max-w-xl flex items-center gap-1.5">
               <Compass className="w-4 h-4 text-amber-300 shrink-0" />
               <span>Location: <strong>{user?.village ? `${user.village}, ` : ''}{displayDistrict}{displayState ? `, ${displayState}` : ''}</strong> ({activeCoords?.latitude?.toFixed(4) || '16.3067'}° N, {activeCoords?.longitude?.toFixed(4) || '80.4365'}° E)</span>
             </p>
@@ -406,7 +406,7 @@ export const ProviderDashboard = () => {
           {/* Master Availability Toggle */}
           <div className="bg-white/10 backdrop-blur-md border border-white/20 p-4 rounded-2xl flex items-center justify-between space-x-4 min-w-[240px]">
             <div>
-              <p className="text-xs font-semibold text-indigo-100">Booking Status</p>
+              <p className="text-xs font-semibold text-emerald-100">Booking Status</p>
               <p className="text-sm font-bold text-white">
                 {isAcceptingBookings ? 'Accepting Requests' : 'Currently Paused'}
               </p>

@@ -4,6 +4,7 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import { NotificationProvider } from './context/NotificationContext';
 import { Layout } from './components/Layout';
 import { AdminLayout } from './components/AdminLayout';
+import { LandingPage } from './pages/LandingPage';
 import { Login } from './pages/Login';
 import { Register } from './pages/Register';
 import { Dashboard } from './pages/Dashboard';
@@ -20,10 +21,10 @@ const ProtectedRoute = ({ children, roleRequired }) => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50 text-indigo-800">
-        <div className="flex flex-col items-center space-y-2">
-          <div className="w-8 h-8 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
-          <p className="text-xs font-semibold">Loading AgriRenta...</p>
+      <div className="min-h-screen flex items-center justify-center bg-slate-900 text-slate-100">
+        <div className="flex flex-col items-center space-y-3">
+          <div className="w-9 h-9 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
+          <p className="text-xs font-bold text-slate-300">Loading AgriRenta Platform...</p>
         </div>
       </div>
     );
@@ -34,7 +35,7 @@ const ProtectedRoute = ({ children, roleRequired }) => {
   }
 
   if (roleRequired && user?.role !== roleRequired) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/dashboard" replace />;
   }
 
   return children;
@@ -46,7 +47,9 @@ export default function App() {
       <AuthProvider>
         <NotificationProvider>
         <Routes>
-          {/* Public Auth Routes */}
+          {/* Public Landing & Auth Routes */}
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/landing" element={<LandingPage />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
 
@@ -65,26 +68,25 @@ export default function App() {
 
           {/* Protected Main Seeker & Provider Shell Layout */}
           <Route
-            path="/"
             element={
               <ProtectedRoute>
                 <Layout />
               </ProtectedRoute>
             }
           >
-            <Route index element={<Dashboard />} />
+            <Route path="/dashboard" element={<Dashboard />} />
             
             {/* Marketplace Routes */}
-            <Route path="rentals" element={<Marketplace />} />
-            <Route path="marketplace" element={<Marketplace />} />
+            <Route path="/rentals" element={<Marketplace />} />
+            <Route path="/marketplace" element={<Marketplace />} />
 
             {/* Live Geo Map Tracking Route */}
-            <Route path="tracking" element={<LiveTrackerPage />} />
-            <Route path="my-bookings" element={<MyBookingsPage />} />
+            <Route path="/tracking" element={<LiveTrackerPage />} />
+            <Route path="/my-bookings" element={<MyBookingsPage />} />
 
             {/* Provider Routes */}
             <Route
-              path="provider/dashboard"
+              path="/provider/dashboard"
               element={
                 <ProtectedRoute roleRequired="provider">
                   <ProviderDashboard />
@@ -92,7 +94,7 @@ export default function App() {
               }
             />
             <Route
-              path="provider/add-equipment"
+              path="/provider/add-equipment"
               element={
                 <ProtectedRoute roleRequired="provider">
                   <ProviderDashboard />
@@ -100,7 +102,7 @@ export default function App() {
               }
             />
             <Route
-              path="provider/requests"
+              path="/provider/requests"
               element={
                 <ProtectedRoute roleRequired="provider">
                   <ProviderRequestsPage />
@@ -110,7 +112,7 @@ export default function App() {
 
           </Route>
 
-          {/* Catch-all */}
+          {/* Catch-all fallback redirect to Landing */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
         </NotificationProvider>
